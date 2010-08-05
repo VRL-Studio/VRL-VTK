@@ -31,10 +31,10 @@ public class Int8Decoder extends DataDecoder {
 
             int arraySize = data.length / 4;
 
-            setArray(new int[arraySize]);
+            setArray(new byte[arraySize]);
 
             for (int i = 0; i < arraySize; i++) {
-                ((int[]) getArray())[i] = in.readByte();
+                ((byte[]) getArray())[i] = in.readByte();
             }
     }
 }

@@ -11,29 +11,67 @@ import eu.mihosoft.vrl.animation.LinearTarget;
 import eu.mihosoft.vrl.visual.ImageUtils;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.io.Serializable;
 
 /**
  *
  * @author Michael Hoffer <info@michaelhoffer.de>
  */
-public class GridPainter {
+public class GridPainter implements Serializable{
+
+    private static final long serialVersionUID = 1L;
+
     private Color colorOne = Color.blue;
     private Color colorTwo = Color.red;
 
-    public void paint(Graphics2D g2, UnstructuredGrid grid) {
-        DataArray pointArray = null;
+    private Point2D offset = new Point2D.Float();
 
+    private boolean flipY;
+    private boolean flipX;
+
+    public void paint(Graphics2D g2, UnstructuredGrid grid) {
+
+        int width = g2.getDeviceConfiguration().getBounds().width;
+        int height = g2.getDeviceConfiguration().getBounds().height;
+
+        DataArray pointArray = null;
         DataArray colorArray = null;
 
         for (DataArray a : grid.getArrays()) {
-            System.out.println("Array: " + a.getName() + ", " + a.getType() + ", #Comp: " + a.getNumberOfComponents());
+            System.out.println("Array: " + a.getName() + ", "
+                    + a.getType() + ", #Comp: " + a.getNumberOfComponents());
             if (a.getNumberOfComponents()==3) {
                 pointArray = a;
             }
 
             if (a.getName().equals("ndata00")) {
                 colorArray = a;
+            }
+
+            if (a.getName().equals("offsets")) {
+
+                int[] offsets = (int[]) a.getDataDecoder().getArray();
+
+                int counter = 0;
+                for(int i : offsets) {
+                    counter++;
+                    System.out.println("O: " + i);
+                    if (counter>10) break;
+                }
+            }
+
+            if (a.getName().equals("connectivity")) {
+
+                int[] offsets = (int[]) a.getDataDecoder().getArray();
+
+                int counter = 0;
+                for(int i : offsets) {
+                    counter++;
+                    System.out.println("C: " + i);
+                    if (counter>10) break;
+                }
             }
         }
 
@@ -70,11 +108,11 @@ public class GridPainter {
         float xLength = Math.abs(xMax-xMin);
         float yLength = Math.abs(yMax-yMin);
 
-        float scaleX = g2.getDeviceConfiguration().getBounds().width/xLength;
-        float scaleY = g2.getDeviceConfiguration().getBounds().height/yLength;
+        float scaleX = width/xLength;
+        float scaleY = height/yLength;
 
-        float offsetX = 0 + xMin;
-        float offsetY = 0 + yMin;
+        float offsetX = (float) (0 + xMin + getOffset().getX());
+        float offsetY = (float) (0 + yMin + getOffset().getY());
 
         System.out.println("X_MIN: " + xMin);
         System.out.println("X_MAX: " + xMax);
@@ -82,6 +120,8 @@ public class GridPainter {
         System.out.println("Y_MIN: " + yMin);
         System.out.println("Y_MAX: " + yMax);
 
+        System.out.println("X_OFFSET: " + offsetX);
+        System.out.println("Y_OFFSET: " + offsetY);
 
         float cMin = Float.MAX_VALUE;
         float cMax = Float.MIN_VALUE;
@@ -99,19 +139,8 @@ public class GridPainter {
         System.out.println("C_MAX: " + cMax);
         System.out.println("C_SCALE: " + scaleColor);
 
-
-
-//        BufferedImage img = ImageUtils.createCompatibleImage(2048, 2048);
-//
-//        Graphics2D g2 = img.createGraphics();
-
-
-
-        Color colorOne = Color.blue;
-        Color colorTwo = Color.red;
-
         g2.setColor(colorOne);
-        g2.fillRect(0, 0, 2048, 2048);
+        g2.fillRect(0, 0, width, height);
 
         LinearTarget red = new LinearTarget(colorOne.getRed(), colorTwo.getRed());
         LinearTarget green = new LinearTarget(colorOne.getGreen(), colorTwo.getGreen());
@@ -145,8 +174,16 @@ public class GridPainter {
 
             g2.setColor(new Color(r,g,b));
 
-            g2.fillRect(x, y, 16, 7);
 
+            if (isFlipX()) {
+                x = width-x;
+            }
+
+            if (isFlipY()) {
+                y = height-y;
+            }
+
+            g2.fillRect(x, y, 36,36);
         }
     }
 
@@ -197,5 +234,47 @@ public class GridPainter {
      */
     public void setColorTwo(Color colorTwo) {
         this.colorTwo = colorTwo;
+    }
+
+    /**
+     * @return the offset
+     */
+    public Point2D getOffset() {
+        return offset;
+    }
+
+    /**
+     * @param offset the offset to set
+     */
+    public void setOffset(Point2D offset) {
+        this.offset = offset;
+    }
+
+    /**
+     * @return the flipY
+     */
+    public boolean isFlipY() {
+        return flipY;
+    }
+
+    /**
+     * @param flipY the flipY to set
+     */
+    public void setFlipY(boolean flipY) {
+        this.flipY = flipY;
+    }
+
+    /**
+     * @return the flipX
+     */
+    public boolean isFlipX() {
+        return flipX;
+    }
+
+    /**
+     * @param flipX the flipX to set
+     */
+    public void setFlipX(boolean flipX) {
+        this.flipX = flipX;
     }
 }

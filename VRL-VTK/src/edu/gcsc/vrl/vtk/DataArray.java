@@ -65,7 +65,7 @@ public class DataArray {
             data = Base64.decode(dataString);
 
             System.out.println(">> BASE64 String length: " + dataString.length());
-            System.out.println(">> array size: " + data.length / 4);
+            System.out.println(">> array size: " + data.length);
 
 
 

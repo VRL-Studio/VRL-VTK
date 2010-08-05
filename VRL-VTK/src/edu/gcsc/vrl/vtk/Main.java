@@ -11,6 +11,7 @@ import eu.mihosoft.vrl.io.Base64;
 import eu.mihosoft.vrl.visual.ImageUtils;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -39,11 +40,18 @@ public class Main {
         UnstructuredGrid grid =
                 new UnstructuredGrid(
                 new File(
-                "/Users/miho/EigeneApps/VRL-VTK/vtk-test-files/finiteout.001179_0000.vtu"));
+//                "/Users/miho/EigeneApps/VRL-VTK/vtk-test-files/finiteout.000045_0000.vtu"));
+//                "/Users/miho/EigeneApps/VRL-VTK/vtk-test-files/finiteout.000132_0000.vtu"));
+        "/Users/miho/EigeneApps/VRL-VTK/vtk-test-files/finiteout.000408_0000.vtu"));
+//                "/Users/miho/EigeneApps/VRL-VTK/vtk-test-files/finiteout.000777_0000.vtu"));
+//                "/Users/miho/EigeneApps/VRL-VTK/vtk-test-files/finiteout.001179_0000.vtu"));
 
         GridPainter p = new GridPainter();
 
-        BufferedImage img = p.paint(512, 512, grid);
+        p.setFlipY(true);
+//        p.setOffset(new Point2D.Double(0, 512));
+
+        BufferedImage img = p.paint(2048, 2048, grid);
 
         try {
             ImageIO.write(img, "png", new File("out.png"));

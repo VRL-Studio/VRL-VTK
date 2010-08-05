@@ -4,10 +4,8 @@ package edu.gcsc.vrl.vtk;
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
-
-
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,23 +18,25 @@ import org.w3c.dom.NodeList;
  *
  * @author Michael Hoffer <info@michaelhoffer.de>
  */
-public class UnstructuredGrid {
+public class UnstructuredGrid implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     private ArrayList<DataArray> arrays = new ArrayList<DataArray>();
 
     public UnstructuredGrid() {
     }
 
-   public UnstructuredGrid(File file) {
-       DecoderFactory decoderFactory = new DecoderFactory();
+    public UnstructuredGrid(File file) {
+        DecoderFactory decoderFactory = new DecoderFactory();
 
         try {
-            
+
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(file);
             doc.getDocumentElement().normalize();
-            System.out.println("Root element " +
-                    doc.getDocumentElement().getNodeName());
+            System.out.println("Root element "
+                    + doc.getDocumentElement().getNodeName());
             NodeList nodeLst = doc.getElementsByTagName("UnstructuredGrid");
 //            System.out.println("Information of all Nodes");
 
@@ -65,14 +65,16 @@ public class UnstructuredGrid {
 //                                System.out.println("F: " + f);
 //                            }
 //
-//                        } else if (array.getDataDecoder() instanceof Int32Decoder) {
+//                        } else
+//                        if (array.getDataDecoder() instanceof Int32Decoder) {
 //                            int[] data = (int[]) array.getDataDecoder().getArray();
 //
 //                            for (int j = 0; j < data.length; j++) {
 //                                int k = data[j];
 //                                System.out.println("I: " + k);
 //                            }
-//                        } else if (array.getDataDecoder() instanceof Int8Decoder) {
+//                        }
+//                            else if (array.getDataDecoder() instanceof Int8Decoder) {
 //                            int[] data = (int[]) array.getDataDecoder().getArray();
 //
 //                            for (int j = 0; j < data.length; j++) {
@@ -118,5 +120,4 @@ public class UnstructuredGrid {
     public ArrayList<DataArray> getArrays() {
         return arrays;
     }
-
 }
