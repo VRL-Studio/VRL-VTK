@@ -121,170 +121,73 @@ public class GridPainter3D implements Serializable {
 
         VTriangleArray triangleArray = new VTriangleArray();
 
-        VGeometry3D result = new VGeometry3D();
-
         int previousOffset = 0;
+        int connectivityOffset = 0;
 
         for (int i = 0; i < offsets.length; i++) {
 
-            int type = types[i];
+//            int type = types[i];
 
             int elementSize = offsets[i] - previousOffset;
             previousOffset = offsets[i];
 
             Node[] nodes = new Node[elementSize];
 
+//            System.out.println("ElementSize: " + elementSize);
+
             for (int j = 0; j < elementSize; j++) {
-                int pointIndex = connectivity[i] * 3; // 3 represents numberOfComponents
+                int pointIndex = connectivity[connectivityOffset+j]; // 3 represents numberOfComponents
 
                 float color = colors[pointIndex];
 
-//                System.out.println(
-//                        "P: X="
-//                        + pointData[pointIndex]
-//                        + ", Y=" + pointData[pointIndex + 1] +
-//                        ", Z=" + pointData[pointIndex + 2]);
-
                 float colorScale = 1.f / (cMax - cMin);
-
-                nodes[j] =
-                        new Node(
-                        pointData[pointIndex],
-                        pointData[pointIndex + 1],
-                        pointData[pointIndex + 2],
-                        new Color3f(color*colorScale,0,0));
-            }
-
-            if (type == 5) {
-                triangleArray.
-                        addTriangle(new Triangle(nodes[0], nodes[1], nodes[2]));
-            }
-
-
-        }
-
-
-
-//        for (int i = 0; i < offsets.length; i++) {
-//            int offset = offsets[i];
-//
-//            int pointIndex = connectivity[i];
-//
-//            int type = types[pointIndex];
-//
-//            int numberOfNodes = 0;
-//
-//            boolean unsupported = false;
-//
-//            switch (type) {
-//                case 0:
-//                    System.err.println(
-//                            ">> type " + type + " is an illegal element type!");
-//                    break;
-//                case 5:
-//                    numberOfNodes = 3;
-//                    break;
-//                case 9:
-//                    numberOfNodes = 4;
-//                    break;
-//                default:
-//                    unsupported = true;
-//                    System.err.println(">> type " + type + " is unsupported!");
-//                    break;
-//            }
-//
-//            // element not supported
-//            if (unsupported) {
-//                continue;
-//            }
-//
-//            Triangle[] triangles =
-//                    createElementTriangles(
-//                    offset, type, numberOfNodes, points, connectivity, colors, cMin, cMax);
-//
-//            if (triangles != null) {
-//                for (Triangle t : triangles) {
-//                    if (t != null) {
-//                        triangleArray.addTriangle(t);
-//                    }
-//                }
-//            }
-
-//        }
-
-        return result;
-    }
-
-    private Triangle[] createElementTriangles(int offset,
-            int type, float[][] points, int[] connectivity,
-            float[] colors, float minColor, float maxColor) {
-
-        Triangle[] result = null;
-
-        float colorScale = 1.f / (maxColor - minColor);
-
-        if (type == 5) {
-            result = new Triangle[1];
-
-            Node[] nodes = new Node[3];
-
-            for (int i = offset; i < offset + 3; i++) {
-
-                int pointIndex = connectivity[i / 3];
 
                 float x = points[pointIndex][0];
                 float y = points[pointIndex][1];
                 float z = points[pointIndex][2];
 
-                float color = colors[pointIndex] * colorScale;
+//                System.out.println("X= " + x + ", Y=" + y + ", Z=" + z + ", C=" + color*colorScale);
 
-                nodes[i - offset] =
-                        new Node(type, x, y, z, new Color3f(color, 0, 0));
+//                System.out.println(
+//                        "P: X="
+//                        + pointData[j*3+pointIndex]
+//                        + ", Y=" + pointData[j*3+pointIndex + 1] +
+//                        ", Z=" + pointData[j*3+pointIndex + 2] + " C:" + color*colorScale);
+
+                nodes[j] =
+                        new Node(x,y,z,
+                        new Color3f(color*colorScale,0,0));
+
+//                nodes[j] =
+//                        new Node(
+//                        pointData[j+pointIndex],
+//                        pointData[j+pointIndex + 1],
+//                        pointData[j+pointIndex + 2],
+//                        new Color3f(color*colorScale,0,0));
             }
 
-            result[0] = new Triangle(nodes[0], nodes[1], nodes[2]);
+            connectivityOffset+=elementSize;
+
+            if (elementSize == 3) {
+                triangleArray.
+                        addTriangle(new Triangle(nodes[0], nodes[1], nodes[2]));
+            }
+
+            if (elementSize == 4) {
+                triangleArray.
+                        addTriangle(new Triangle(nodes[0], nodes[1], nodes[2]));
+                triangleArray.
+                        addTriangle(new Triangle(nodes[0], nodes[2], nodes[3]));
+            }
+
         }
-//        else if (type == 9) {
-//            result = new Triangle[2]; // split quad into two triangles
-//
-//            // first triangle
-//            Node[] nodesFirst = new Node[3];
-//
-//            for (int i = offset; i < offset + 3; i++) {
-////                System.out.println("INDEX: " + (i -offset));
-//                float x = points[i/3][0];
-//                float y = points[i/3][1];
-//                float z = points[i/3][2];
-//
-//                float color = colors[i/3] * colorScale;
-//
-//                nodesFirst[i - offset] =
-//                        new Node(type, x, y, z, new Color3f(color, 0, 0));
-//            }
-//
-//            result[0] =
-//                    new Triangle(nodesFirst[0], nodesFirst[1], nodesFirst[2]);
-//
-//            // second triangle
-//            Node[] nodesSecond = new Node[3];
-//
-//            for (int i = offset +2; i < offset + 4; i++) {
-//                float x = points[i/3][0];
-//                float y = points[i/3][1];
-//                float z = points[i/3][2];
-//
-//                float color = colors[i/3] * colorScale;
-//
-////                System.out.println("INDEX: " + (i -offset));
-//
-//                nodesSecond[i - (offset +2)] =
-//                        new Node(type, x, y, z, new Color3f(color, 0, 0));
-//            }
-//
-//            result[1] =
-//                    new Triangle(nodesSecond[0], nodesSecond[1], nodesSecond[2]);
-//        }
+
+        VGeometry3D result = new VGeometry3D(
+                triangleArray, Color.black, Color.white,1.f, true, true);
+
+        System.out.println("FINAL Array-SIZE: " + triangleArray.size());
 
         return result;
     }
+
 }

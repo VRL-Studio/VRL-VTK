@@ -59,5 +59,9 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        GridPainter3D p2 = new GridPainter3D();
+
+        p2.paint(Color.orange, Color.yellow, grid);
+
     }
 }
