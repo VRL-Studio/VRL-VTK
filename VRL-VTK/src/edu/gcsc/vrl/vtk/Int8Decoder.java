@@ -29,7 +29,7 @@ public class Int8Decoder extends DataDecoder {
                     new BufferedInputStream(
                     new ByteArrayInputStream(data)));
 
-            int arraySize = data.length / 4;
+            int arraySize = data.length;
 
             setArray(new byte[arraySize]);
 

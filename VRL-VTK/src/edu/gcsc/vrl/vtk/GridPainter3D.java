@@ -6,6 +6,7 @@ package edu.gcsc.vrl.vtk;
 
 import eu.mihosoft.vrl.animation.LinearTarget;
 import eu.mihosoft.vrl.v3d.Node;
+import eu.mihosoft.vrl.v3d.Nodes;
 import eu.mihosoft.vrl.v3d.Triangle;
 import eu.mihosoft.vrl.v3d.VGeometry3D;
 import eu.mihosoft.vrl.v3d.VTriangleArray;
@@ -115,9 +116,9 @@ public class GridPainter3D implements Serializable {
         System.out.println("C_MAX: " + cMax);
         System.out.println("C_SCALE: " + scaleColor);
 
-//        LinearTarget red = new LinearTarget(colorOne.getRed(), colorTwo.getRed());
-//        LinearTarget green = new LinearTarget(colorOne.getGreen(), colorTwo.getGreen());
-//        LinearTarget blue = new LinearTarget(colorOne.getBlue(), colorTwo.getBlue());
+        LinearTarget red = new LinearTarget(colorOne.getRed(), colorTwo.getRed());
+        LinearTarget green = new LinearTarget(colorOne.getGreen(), colorTwo.getGreen());
+        LinearTarget blue = new LinearTarget(colorOne.getBlue(), colorTwo.getBlue());
 
         VTriangleArray triangleArray = new VTriangleArray();
 
@@ -126,68 +127,61 @@ public class GridPainter3D implements Serializable {
 
         for (int i = 0; i < offsets.length; i++) {
 
-//            int type = types[i];
+            int type = types[i];
 
             int elementSize = offsets[i] - previousOffset;
             previousOffset = offsets[i];
 
             Node[] nodes = new Node[elementSize];
 
-//            System.out.println("ElementSize: " + elementSize);
-
             for (int j = 0; j < elementSize; j++) {
-                int pointIndex = connectivity[connectivityOffset+j]; // 3 represents numberOfComponents
+                int pointIndex = connectivity[connectivityOffset + j];
 
                 float color = colors[pointIndex];
 
                 float colorScale = 1.f / (cMax - cMin);
 
+                red.step(color*colorScale);
+                blue.step(color*colorScale);
+                green.step(color*colorScale);
+
                 float x = points[pointIndex][0];
                 float y = points[pointIndex][1];
                 float z = points[pointIndex][2];
 
-//                System.out.println("X= " + x + ", Y=" + y + ", Z=" + z + ", C=" + color*colorScale);
-
-//                System.out.println(
-//                        "P: X="
-//                        + pointData[j*3+pointIndex]
-//                        + ", Y=" + pointData[j*3+pointIndex + 1] +
-//                        ", Z=" + pointData[j*3+pointIndex + 2] + " C:" + color*colorScale);
-
                 nodes[j] =
-                        new Node(x,y,z,
-                        new Color3f(color*colorScale,0,0));
-
-//                nodes[j] =
-//                        new Node(
-//                        pointData[j+pointIndex],
-//                        pointData[j+pointIndex + 1],
-//                        pointData[j+pointIndex + 2],
-//                        new Color3f(color*colorScale,0,0));
+                        new Node(x, y, z,
+                        new Color3f(new Color(
+                        (int) red.getValue(),
+                        (int) green.getValue(),
+                        (int) blue.getValue())));
             }
 
-            connectivityOffset+=elementSize;
+            connectivityOffset += elementSize;
 
-            if (elementSize == 3) {
-                triangleArray.
-                        addTriangle(new Triangle(nodes[0], nodes[1], nodes[2]));
-            }
+            // we only support triangles and quads
+            // (quads are represented as two triangles)
+            if (type == 5 || type == 9) {
+                if (elementSize == 3) {
+                    triangleArray.addTriangle(
+                            new Triangle(nodes[0], nodes[1], nodes[2]));
+                }
 
-            if (elementSize == 4) {
-                triangleArray.
-                        addTriangle(new Triangle(nodes[0], nodes[1], nodes[2]));
-                triangleArray.
-                        addTriangle(new Triangle(nodes[0], nodes[2], nodes[3]));
+                if (elementSize == 4) {
+                    triangleArray.addTriangle(
+                            new Triangle(nodes[0], nodes[1], nodes[2]));
+                    triangleArray.addTriangle(
+                            new Triangle(nodes[0], nodes[2], nodes[3]));
+                }
             }
 
         }
 
-        VGeometry3D result = new VGeometry3D(
-                triangleArray, Color.black, Color.white,1.f, true, true);
+        triangleArray.centerNodes();
 
-        System.out.println("FINAL Array-SIZE: " + triangleArray.size());
+        VGeometry3D result = new VGeometry3D(
+                triangleArray, Color.black, Color.white, 1.f, true, true);
 
         return result;
     }
-
 }
