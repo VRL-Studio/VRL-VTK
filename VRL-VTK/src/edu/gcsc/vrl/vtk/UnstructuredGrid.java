@@ -38,7 +38,6 @@ public class UnstructuredGrid implements Serializable {
             System.out.println("Root element "
                     + doc.getDocumentElement().getNodeName());
             NodeList nodeLst = doc.getElementsByTagName("UnstructuredGrid");
-//            System.out.println("Information of all Nodes");
 
             for (int s = 0; s < nodeLst.getLength(); s++) {
 
@@ -56,56 +55,8 @@ public class UnstructuredGrid implements Serializable {
 
                         DataArray array = new DataArray(n, decoderFactory);
 
-//                        if (array.getDataDecoder() instanceof Float32Decoder) {
-//
-//                            float[] data = (float[]) array.getDataDecoder().getArray();
-//
-//                            for (int j = 0; j < data.length; j++) {
-//                                float f = data[j];
-//                                System.out.println("F: " + f);
-//                            }
-//
-//                        } else
-//                        if (array.getDataDecoder() instanceof Int32Decoder) {
-//                            int[] data = (int[]) array.getDataDecoder().getArray();
-//
-//                            for (int j = 0; j < data.length; j++) {
-//                                int k = data[j];
-//                                System.out.println("I: " + k);
-//                            }
-//                        }
-//                            else if (array.getDataDecoder() instanceof Int8Decoder) {
-//                            int[] data = (int[]) array.getDataDecoder().getArray();
-//
-//                            for (int j = 0; j < data.length; j++) {
-//                                int k = data[j];
-//                                System.out.println("I8: " + k);
-//                            }
-//                        }
-
                         arrays.add(array);
                     }
-
-
-//                    Element fstNmElmnt = (Element) fstNmElmntLst.item(0);
-//                    System.out.println(fstNmElmnt);
-//                    NodeList fstNm = fstNmElmnt.getChildNodes();
-//
-//                    for(int i = 0 ; i < fstNm.getLength();i++) {
-//                        Node n = fstNm.item(i);
-//                        System.out.println("Node "+ i + " : " + n);
-//                    }
-
-
-
-
-//                    Element fstNmElmnt = (Element) fstNmElmntLst.item(0);
-//                    NodeList fstNm = fstNmElmnt.getChildNodes();
-//                    System.out.println("First Name : " + ((Node) fstNm.item(0)).getNodeValue());
-//                    NodeList lstNmElmntLst = fstElmnt.getElementsByTagName("lastname");
-//                    Element lstNmElmnt = (Element) lstNmElmntLst.item(0);
-//                    NodeList lstNm = lstNmElmnt.getChildNodes();
-//                    System.out.println("Last Name : " + ((Node) lstNm.item(0)).getNodeValue());
                 }
 
             }

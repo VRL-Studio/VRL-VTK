@@ -46,18 +46,18 @@ public class Main {
 //                "/Users/miho/EigeneApps/VRL-VTK/vtk-test-files/finiteout.000777_0000.vtu"));
 //                "/Users/miho/EigeneApps/VRL-VTK/vtk-test-files/finiteout.001179_0000.vtu"));
 
-        GridPainter p = new GridPainter();
-
-        p.setFlipY(true);
-//        p.setOffset(new Point2D.Double(0, 512));
-
-        BufferedImage img = p.paint(2048, 2048, grid);
-
-        try {
-            ImageIO.write(img, "png", new File("out.png"));
-        } catch (IOException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        GridPainter p = new GridPainter();
+//
+//        p.setFlipY(true);
+////        p.setOffset(new Point2D.Double(0, 512));
+//
+//        BufferedImage img = p.paint(2048, 2048, grid);
+//
+//        try {
+//            ImageIO.write(img, "png", new File("out.png"));
+//        } catch (IOException ex) {
+//            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+//        }
 
         GridPainter3D p2 = new GridPainter3D();
 
