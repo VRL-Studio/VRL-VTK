@@ -38,7 +38,7 @@ public class DataDecoder {
         return result;
     }
 
-    public void decode(byte[] data) throws IOException, UnsupportedArrayTypeException{
+    public void decode(byte[] data, ByteOrder byteOrder) throws IOException, UnsupportedArrayTypeException{
         throw new UnsupportedOperationException(">> Binary format unsupported!");
     }
 

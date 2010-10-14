@@ -22,6 +22,7 @@ public class UnstructuredGrid implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private ArrayList<DataArray> arrays = new ArrayList<DataArray>();
+    private ByteOrder byteOrder = ByteOrder.BIG_ENDIAN;
 
     public UnstructuredGrid() {
     }
@@ -37,6 +38,14 @@ public class UnstructuredGrid implements Serializable {
             doc.getDocumentElement().normalize();
             System.out.println("Root element "
                     + doc.getDocumentElement().getNodeName());
+
+            String byteOrderString = doc.getDocumentElement().getAttribute("byte_order");
+
+            if (byteOrderString.trim().equals("LittleEndian")) {
+                byteOrder = ByteOrder.LITTLE_ENDIAN;
+            }
+
+
             NodeList nodeLst = doc.getElementsByTagName("UnstructuredGrid");
 
             for (int s = 0; s < nodeLst.getLength(); s++) {
@@ -53,7 +62,7 @@ public class UnstructuredGrid implements Serializable {
                         Node n = fstNmElmntLst.item(i);
 //                        System.out.println("Node " + i + " : " + n);
 
-                        DataArray array = new DataArray(n, decoderFactory);
+                        DataArray array = new DataArray(n, decoderFactory, byteOrder);
 
                         arrays.add(array);
                     }

@@ -22,7 +22,7 @@ public class Int8Decoder extends DataDecoder {
     }
 
     @Override
-    public void decode(byte[] data) throws IOException {
+    public void decode(byte[] data, ByteOrder byteOrder) throws IOException {
         
             DataInputStream in =
                     new DataInputStream(
@@ -34,6 +34,13 @@ public class Int8Decoder extends DataDecoder {
             setArray(new byte[arraySize]);
 
             for (int i = 0; i < arraySize; i++) {
+
+//                byte value = in.readByte();
+//
+//                if (byteOrder.equals(ByteOrder.LITTLE_ENDIAN)) {
+//                    value = Byte.reverseBytes(value);
+//                }
+
                 ((byte[]) getArray())[i] = in.readByte();
             }
     }

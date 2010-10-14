@@ -22,7 +22,7 @@ public class Float32Decoder extends DataDecoder {
     }
 
     @Override
-    public void decode(byte[] data) throws IOException {
+    public void decode(byte[] data, ByteOrder byteOrder) throws IOException {
         DataInputStream in =
                 new DataInputStream(
                 new BufferedInputStream(
@@ -33,7 +33,12 @@ public class Float32Decoder extends DataDecoder {
         setArray(new float[arraySize]);
 
         for (int i = 0; i < arraySize; i++) {
-            ((float[]) getArray())[i] = in.readFloat();
+            int bytes = in.readInt();
+
+            if (byteOrder.equals(ByteOrder.LITTLE_ENDIAN)) {
+                bytes = Integer.reverseBytes(bytes);
+            }
+            ((float[]) getArray())[i] = Float.intBitsToFloat(bytes);
         }
     }
 }

@@ -29,7 +29,7 @@ public class DataArray {
     public DataArray() {
     }
 
-    public DataArray(Node n, DecoderFactory decoderFactory) {
+    public DataArray(Node n, DecoderFactory decoderFactory, ByteOrder byteOrder) {
 
 
         for (int j = 0; j < n.getAttributes().getLength(); j++) {
@@ -54,7 +54,7 @@ public class DataArray {
         System.out.println("DataArray: " + name);
         System.out.println(">> type: " + type);
 
-        if (attributes.get("format").equals("binary".trim())) {
+        if (attributes.get("format").trim().equals("binary")) {
             System.out.println(">> format: binary");
 
             // each Base64 entry consists of two entries
@@ -77,7 +77,7 @@ public class DataArray {
         dataDecoder = decoderFactory.getDecoder(type);
 
         try {
-            dataDecoder.decode(data);
+            dataDecoder.decode(data, byteOrder);
         } catch (IOException ex) {
             Logger.getLogger(DataArray.class.getName()).
                     log(Level.SEVERE, null, ex);
