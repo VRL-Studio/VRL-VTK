@@ -5,11 +5,14 @@
 package edu.gcsc.vrl.vtk;
 
 import eu.mihosoft.vrl.animation.LinearTarget;
+import eu.mihosoft.vrl.reflection.MethodInfo;
+import eu.mihosoft.vrl.reflection.ParamInfo;
 import eu.mihosoft.vrl.v3d.Node;
 import eu.mihosoft.vrl.v3d.Triangle;
 import eu.mihosoft.vrl.v3d.VGeometry3D;
 import eu.mihosoft.vrl.v3d.VTriangleArray;
 import java.awt.Color;
+import java.io.File;
 import java.io.Serializable;
 import javax.vecmath.Color3f;
 
@@ -28,10 +31,25 @@ public class GridPainter3D implements Serializable {
      * @param grid
      * @return
      */
+    @MethodInfo(hide=true)
     public VGeometry3D paint(
             Color colorOne, Color colorTwo,
             UnstructuredGrid grid, String colorArrayName) {
         return paint(colorOne, colorTwo, grid, 20, colorArrayName);
+    }
+
+    /**
+     *
+     * @param colorOne
+     * @param colorTwo
+     * @param grid
+     * @return
+     */
+    @MethodInfo()
+    public VGeometry3D paint(
+            Color colorOne, Color colorTwo,
+            @ParamInfo(style="load-dialog") File f, String colorArrayName) {
+        return paint(colorOne, colorTwo, new UnstructuredGrid(f), 20, colorArrayName);
     }
 
     /**
