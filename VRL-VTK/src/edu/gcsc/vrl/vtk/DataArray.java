@@ -60,14 +60,13 @@ public class DataArray {
             // each Base64 entry consists of two entries
             // we only use the second one to get rid of the data length
             // int32 header
-            String dataString = n.getTextContent().split("==")[1];
+            int dataStartPos = n.getTextContent().indexOf("==")+2;
+            String dataString = n.getTextContent().substring(dataStartPos);
 
             data = Base64.decode(dataString);
 
             System.out.println(">> BASE64 String length: " + dataString.length());
             System.out.println(">> array size: " + data.length);
-
-
 
         } else {
             // don't know what to do...

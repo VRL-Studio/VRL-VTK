@@ -31,11 +31,11 @@ public class GridPainter3D implements Serializable {
      * @param grid
      * @return
      */
-    @MethodInfo(hide=true)
+    @MethodInfo(hide = true)
     public VGeometry3D paint(
             Color colorOne, Color colorTwo,
             UnstructuredGrid grid, String colorArrayName) {
-        return paint(colorOne, colorTwo, grid, 20, colorArrayName);
+        return paint(colorOne, colorTwo, grid, 20f, colorArrayName);
     }
 
     /**
@@ -48,8 +48,30 @@ public class GridPainter3D implements Serializable {
     @MethodInfo()
     public VGeometry3D paint(
             Color colorOne, Color colorTwo,
-            @ParamInfo(style="load-dialog") File f, String colorArrayName) {
-        return paint(colorOne, colorTwo, new UnstructuredGrid(f), 20, colorArrayName);
+            @ParamInfo(style = "load-dialog") File f, 
+            @ParamInfo(name = "color array:") String colorArrayName,
+            @ParamInfo(name = "show hight:") Boolean useColorAsZ) {
+        return paint(colorOne, colorTwo, new UnstructuredGrid(f), 20f, colorArrayName);
+    }
+
+    /**
+     *
+     * @param colorOne
+     * @param colorTwo
+     * @param grid
+     * @return
+     */
+    @MethodInfo()
+    public VGeometry3D paint(
+            Color colorOne, Color colorTwo,
+            @ParamInfo(style = "load-dialog") File f,
+            @ParamInfo(name = "color array:") String colorArrayName,
+            @ParamInfo(name = "min value (optional):", nullIsValid = true) Float min,
+            @ParamInfo(name = "max value (optional):", nullIsValid = true) Float max,
+            @ParamInfo(name = "show height:") Boolean useColorAsZ,
+            @ParamInfo(name = "scale height (optional):", nullIsValid=true) Float scaleZ) {
+        return paint(colorOne, colorTwo, new UnstructuredGrid(f),
+                20f, colorArrayName, min, max, useColorAsZ, scaleZ);
     }
 
     /**
@@ -62,7 +84,7 @@ public class GridPainter3D implements Serializable {
     public VGeometry3D paint(
             Color colorOne, Color colorTwo,
             UnstructuredGrid grid) {
-        return paint(colorOne, colorTwo, grid, 20, "ndata000");
+        return paint(colorOne, colorTwo, grid, 20f, "ndata000");
     }
 
     /**
@@ -75,7 +97,24 @@ public class GridPainter3D implements Serializable {
      */
     public VGeometry3D paint(
             Color colorOne, Color colorTwo,
-            UnstructuredGrid grid, float maxLength, String colorArrayName) {
+            UnstructuredGrid grid, Float maxLength, String colorArrayName) {
+        return paint(colorOne, colorTwo, grid,
+                maxLength, colorArrayName, null, null, false,null);
+
+    }
+
+    /**
+     *
+     * @param colorOne
+     * @param colorTwo
+     * @param grid
+     * @param maxLength
+     * @return
+     */
+    public VGeometry3D paint(
+            Color colorOne, Color colorTwo,
+            UnstructuredGrid grid, Float maxLength, String colorArrayName,
+            Float rangeMin, Float rangeMax, Boolean useColorAsZ, Float scaleZ) {
 
         // evaluate data arrays and convert array data
         float[] pointData = null;
@@ -89,27 +128,31 @@ public class GridPainter3D implements Serializable {
                     + a.getType() + ", #Comp: " + a.getNumberOfComponents());
             if (a.getNumberOfComponents() == 3) {
                 pointData = (float[]) a.getDataDecoder().getArray();
-                System.out.println("POINTS");
+                System.out.println("Points: " + pointData.length);
             }
 
             if (a.getName().equals("connectivity")) {
                 connectivity = (int[]) a.getDataDecoder().getArray();
+                System.out.println("connectivity: " + connectivity.length);
             }
 
             if (a.getName().equals("offsets")) {
                 offsets = (int[]) a.getDataDecoder().getArray();
+                System.out.println("offsets: " + offsets.length);
             }
 
             if (a.getName().equals("types")) {
                 types = (byte[]) a.getDataDecoder().getArray();
+                System.out.println("types: " + types.length);
             }
 
             if (a.getName().equals(colorArrayName)) {
                 colors = (float[]) a.getDataDecoder().getArray();
+                System.out.println("colors: " + colors.length);
             }
         }
 
-        // convert point data from one dimensional array to two dimensional
+        // convert point data from one dimensional array to three dimensional
         // point array
 
         int numberOfComponents = 3;
@@ -137,7 +180,7 @@ public class GridPainter3D implements Serializable {
 
             for (int i = 0; i < 3; i++) {
                 if (p[i] == Float.floatToIntBits(Float.NaN)) {
-                    p[i]=0;
+                    p[i] = 0;
                 }
             }
 
@@ -151,7 +194,7 @@ public class GridPainter3D implements Serializable {
             zMax = Math.max(zMax, p[2]);
 
 
-            //System.out.println("P[0]: " + p[0] + " P[1]: " + p[1] + " P[2]: " + p[2]);
+//            System.out.println("P[0]: " + p[0] + " P[1]: " + p[1] + " P[2]: " + p[2]);
         }
 
         float xLength = Math.abs(xMax - xMin);
@@ -168,8 +211,8 @@ public class GridPainter3D implements Serializable {
         System.out.println("Y_MIN: " + yMin);
         System.out.println("Y_MAX: " + yMax);
 
-        System.out.println("Z_MIN: " + yMin);
-        System.out.println("Z_MAX: " + yMax);
+        System.out.println("Z_MIN: " + zMin);
+        System.out.println("Z_MAX: " + zMax);
 
         System.out.println("X_OFFSET: " + offsetX);
         System.out.println("Y_OFFSET: " + offsetY);
@@ -180,13 +223,33 @@ public class GridPainter3D implements Serializable {
         float cMin = Float.MAX_VALUE;
         float cMax = Float.MIN_VALUE;
 
-        for (float c : colors) {
-            cMin = Math.min(cMin, c);
-            cMax = Math.max(cMax, c);
+        if (rangeMin != null && rangeMax != null) {
+
+            // custom min and max values
+            cMin = rangeMin;
+            cMax = rangeMax;
+
+            // trim values to range
+            for (int cInd = 0; cInd < colors.length;cInd++) {
+                colors[cInd] = Math.max(cMin, colors[cInd]);
+                colors[cInd] = Math.min(cMax, colors[cInd]);
+            }
+
+        } else {
+
+            // search min and max values
+            for (float c : colors) {
+                cMin = Math.min(cMin, c);
+                cMax = Math.max(cMax, c);
+            }
         }
 
         double cLength = Math.abs(cMax - cMin);
-        double scaleColor = 1.d / cLength;
+        double scaleColor = 1.d;
+
+        if (cLength > 0) {
+            scaleColor = 1.d / cLength;
+        }
 
         System.out.println("C_MIN: " + cMin);
         System.out.println("C_MAX: " + cMax);
@@ -231,6 +294,8 @@ public class GridPainter3D implements Serializable {
 
             for (int j = 0; j < elementSize; j++) {
 
+//                System.out.println("ElementSize: " + elementSize);
+
                 // the connectivity array contains the point indices of this
                 // element
                 int pointIndex = connectivity[connectivityOffset + j];
@@ -255,6 +320,17 @@ public class GridPainter3D implements Serializable {
                 y *= scale;
                 z *= scale;
 
+                // we overwrite z coordinate with color value
+                if (useColorAsZ) {
+                    z = colors[pointIndex] - offsetZ - zLength / 2.f;
+
+                    if (scaleZ!=null) {
+                        z*=colorScale*scaleZ;
+                    } else {
+                        z*=colorScale*maxLength;
+                    }
+                }
+
                 int r = (int) red.getValue();
                 int g = (int) green.getValue();
                 int b = (int) blue.getValue();
@@ -265,10 +341,10 @@ public class GridPainter3D implements Serializable {
                             new Node(x, y, z,
                             new Color3f(new Color(r, g, b)));
                 } catch (Exception ex) {
-                    System.out.println(
-                            ">> color values: c="
-                            + color * colorScale
-                            + ", r=" + r + ", g=" + g + ", b=" + b);
+//                    System.out.println(
+//                            ">> color values: c="
+//                            + color * colorScale
+//                            + ", r=" + r + ", g=" + g + ", b=" + b);
                 }
             }
 
