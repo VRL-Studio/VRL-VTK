@@ -35,7 +35,7 @@ public class GridPainter3D implements Serializable {
     public VGeometry3D paint(
             Color colorOne, Color colorTwo,
             UnstructuredGrid grid, String colorArrayName) {
-        return paint(colorOne, colorTwo, grid, 20f, colorArrayName);
+        return paint(colorOne, colorTwo, grid, 25f, colorArrayName);
     }
 
     /**
@@ -51,7 +51,8 @@ public class GridPainter3D implements Serializable {
             @ParamInfo(style = "load-dialog") File f, 
             @ParamInfo(name = "color array:") String colorArrayName,
             @ParamInfo(name = "show hight:") Boolean useColorAsZ) {
-        return paint(colorOne, colorTwo, new UnstructuredGrid(f), 20f, colorArrayName);
+        return paint(colorOne, colorTwo, new UnstructuredGrid(f),
+                25f, colorArrayName,null,null, useColorAsZ,null);
     }
 
     /**
@@ -71,7 +72,7 @@ public class GridPainter3D implements Serializable {
             @ParamInfo(name = "show height:") Boolean useColorAsZ,
             @ParamInfo(name = "scale height (optional):", nullIsValid=true) Float scaleZ) {
         return paint(colorOne, colorTwo, new UnstructuredGrid(f),
-                20f, colorArrayName, min, max, useColorAsZ, scaleZ);
+                25f, colorArrayName, min, max, useColorAsZ, scaleZ);
     }
 
     /**
@@ -84,7 +85,7 @@ public class GridPainter3D implements Serializable {
     public VGeometry3D paint(
             Color colorOne, Color colorTwo,
             UnstructuredGrid grid) {
-        return paint(colorOne, colorTwo, grid, 20f, "ndata000");
+        return paint(colorOne, colorTwo, grid, 25f, "ndata000");
     }
 
     /**
