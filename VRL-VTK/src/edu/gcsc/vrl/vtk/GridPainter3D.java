@@ -4,7 +4,8 @@
  */
 package edu.gcsc.vrl.vtk;
 
-import eu.mihosoft.vrl.animation.LinearTarget;
+import eu.mihosoft.vrl.animation.AnimationInterpolation;
+import eu.mihosoft.vrl.animation.LinearInterpolation;
 import eu.mihosoft.vrl.annotation.MethodInfo;
 import eu.mihosoft.vrl.annotation.ParamInfo;
 import eu.mihosoft.vrl.v3d.Node;
@@ -259,12 +260,12 @@ public class GridPainter3D implements Serializable {
 
         // define linear color interpolators
 
-        LinearTarget red =
-                new LinearTarget(colorOne.getRed(), colorTwo.getRed());
-        LinearTarget green =
-                new LinearTarget(colorOne.getGreen(), colorTwo.getGreen());
-        LinearTarget blue =
-                new LinearTarget(colorOne.getBlue(), colorTwo.getBlue());
+        LinearInterpolation red =
+                new LinearInterpolation(colorOne.getRed(), colorTwo.getRed());
+        LinearInterpolation green =
+                new LinearInterpolation(colorOne.getGreen(), colorTwo.getGreen());
+        LinearInterpolation blue =
+                new LinearInterpolation(colorOne.getBlue(), colorTwo.getBlue());
 
         // geometry
 

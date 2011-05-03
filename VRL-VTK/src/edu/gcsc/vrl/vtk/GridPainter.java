@@ -7,7 +7,8 @@ package edu.gcsc.vrl.vtk;
 
 
 
-import eu.mihosoft.vrl.animation.LinearTarget;
+import eu.mihosoft.vrl.animation.AnimationInterpolation;
+import eu.mihosoft.vrl.animation.LinearInterpolation;
 import eu.mihosoft.vrl.visual.ImageUtils;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -142,9 +143,9 @@ public class GridPainter implements Serializable{
         g2.setColor(colorOne);
         g2.fillRect(0, 0, width, height);
 
-        LinearTarget red = new LinearTarget(colorOne.getRed(), colorTwo.getRed());
-        LinearTarget green = new LinearTarget(colorOne.getGreen(), colorTwo.getGreen());
-        LinearTarget blue = new LinearTarget(colorOne.getBlue(), colorTwo.getBlue());
+        LinearInterpolation red = new LinearInterpolation(colorOne.getRed(), colorTwo.getRed());
+        LinearInterpolation green = new LinearInterpolation(colorOne.getGreen(), colorTwo.getGreen());
+        LinearInterpolation blue = new LinearInterpolation(colorOne.getBlue(), colorTwo.getBlue());
 
 
         for (int i = 0; i < numberOfPoints;i++) {

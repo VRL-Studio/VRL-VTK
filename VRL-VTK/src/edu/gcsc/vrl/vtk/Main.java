@@ -6,7 +6,7 @@ package edu.gcsc.vrl.vtk;
  */
 
 
-import eu.mihosoft.vrl.animation.LinearTarget;
+import eu.mihosoft.vrl.animation.AnimationInterpolation;
 import eu.mihosoft.vrl.io.Base64;
 import eu.mihosoft.vrl.visual.ImageUtils;
 import java.awt.Color;
