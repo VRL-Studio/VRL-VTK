@@ -6,6 +6,7 @@ package edu.gcsc.vrl.vtk;
 
 import eu.mihosoft.vrl.animation.AnimationInterpolation;
 import eu.mihosoft.vrl.animation.LinearInterpolation;
+import eu.mihosoft.vrl.annotation.ComponentInfo;
 import eu.mihosoft.vrl.annotation.MethodInfo;
 import eu.mihosoft.vrl.annotation.ParamInfo;
 import eu.mihosoft.vrl.v3d.Node;
@@ -21,6 +22,7 @@ import javax.vecmath.Color3f;
  *
  * @author Michael Hoffer <info@michaelhoffer.de>
  */
+@ComponentInfo(name = "VTKView", category="VTK")
 public class GridPainter3D implements Serializable {
 
     private static final long serialVersionUID = 1L;
