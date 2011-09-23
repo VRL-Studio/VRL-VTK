@@ -23,7 +23,6 @@ public class Configurator extends VPluginConfigurator{
         setDescription("Simple VTK Viewer");
     }
 
-
     public void register(PluginAPI api) {
         VPluginAPI vapi = (VPluginAPI)api;
         vapi.addComponent(GridPainter3D.class);
