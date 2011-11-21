@@ -75,9 +75,9 @@
     <property file="build.properties"/>
     
     <target name="-post-jar">
-        <echo message="Copying ${dist.jar} to ${vrl.dir}/plugins"/>
+        <echo message="Copying ${dist.jar} to ${vrl.dir}/plugin-updates"/>
         <copy 
         file="${dist.jar}" 
-        todir="${vrl.dir}/plugins"/>
+        todir="${vrl.dir}/plugin-updates"/>
     </target>
 </project>
