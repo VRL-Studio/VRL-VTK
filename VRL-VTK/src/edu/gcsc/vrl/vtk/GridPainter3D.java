@@ -128,31 +128,31 @@ public class GridPainter3D implements Serializable {
         byte[] types = null;
 
         for (DataArray a : grid.getArrays()) {
-            System.out.println("Array: " + a.getName() + ", "
-                    + a.getType() + ", #Comp: " + a.getNumberOfComponents());
+//            System.out.println("Array: " + a.getName() + ", "
+//                    + a.getType() + ", #Comp: " + a.getNumberOfComponents());
             if (a.getNumberOfComponents() == 3) {
                 pointData = (float[]) a.getDataDecoder().getArray();
-                System.out.println("Points: " + pointData.length);
+//                System.out.println("Points: " + pointData.length);
             }
 
             if (a.getName().equals("connectivity")) {
                 connectivity = (int[]) a.getDataDecoder().getArray();
-                System.out.println("connectivity: " + connectivity.length);
+//                System.out.println("connectivity: " + connectivity.length);
             }
 
             if (a.getName().equals("offsets")) {
                 offsets = (int[]) a.getDataDecoder().getArray();
-                System.out.println("offsets: " + offsets.length);
+//                System.out.println("offsets: " + offsets.length);
             }
 
             if (a.getName().equals("types")) {
                 types = (byte[]) a.getDataDecoder().getArray();
-                System.out.println("types: " + types.length);
+//                System.out.println("types: " + types.length);
             }
 
             if (a.getName().equals(colorArrayName)) {
                 colors = (float[]) a.getDataDecoder().getArray();
-                System.out.println("colors: " + colors.length);
+//                System.out.println("colors: " + colors.length);
             }
         }
 
@@ -209,17 +209,17 @@ public class GridPainter3D implements Serializable {
         float offsetY = (float) yMin;
         float offsetZ = (float) zMin;
 
-        System.out.println("X_MIN: " + xMin);
-        System.out.println("X_MAX: " + xMax);
-
-        System.out.println("Y_MIN: " + yMin);
-        System.out.println("Y_MAX: " + yMax);
-
-        System.out.println("Z_MIN: " + zMin);
-        System.out.println("Z_MAX: " + zMax);
-
-        System.out.println("X_OFFSET: " + offsetX);
-        System.out.println("Y_OFFSET: " + offsetY);
+//        System.out.println("X_MIN: " + xMin);
+//        System.out.println("X_MAX: " + xMax);
+//
+//        System.out.println("Y_MIN: " + yMin);
+//        System.out.println("Y_MAX: " + yMax);
+//
+//        System.out.println("Z_MIN: " + zMin);
+//        System.out.println("Z_MAX: " + zMax);
+//
+//        System.out.println("X_OFFSET: " + offsetX);
+//        System.out.println("Y_OFFSET: " + offsetY);
 
 
         // compute color scale
@@ -255,9 +255,9 @@ public class GridPainter3D implements Serializable {
             scaleColor = 1.d / cLength;
         }
 
-        System.out.println("C_MIN: " + cMin);
-        System.out.println("C_MAX: " + cMax);
-        System.out.println("C_SCALE: " + scaleColor);
+//        System.out.println("C_MIN: " + cMin);
+//        System.out.println("C_MAX: " + cMax);
+//        System.out.println("C_SCALE: " + scaleColor);
 
 
         // define linear color interpolators
