@@ -16,19 +16,21 @@ import eu.mihosoft.vrl.v3d.VTriangleArray;
 import java.awt.Color;
 import java.io.File;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import javax.vecmath.Color3f;
 
 /**
  *
  * @author Michael Hoffer <info@michaelhoffer.de>
  */
-@ComponentInfo(name = "VTKView", category="VTK")
+@ComponentInfo(name = "VTKView", category = "VTK")
 public class GridPainter3D implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * 
+     *
      * @param colorOne
      * @param colorTwo
      * @param grid
@@ -51,11 +53,11 @@ public class GridPainter3D implements Serializable {
     @MethodInfo()
     public VGeometry3D paint(
             Color colorOne, Color colorTwo,
-            @ParamInfo(style = "load-dialog") File f, 
+            @ParamInfo(style = "load-dialog") File f,
             @ParamInfo(name = "color array:") String colorArrayName,
             @ParamInfo(name = "show hight:") Boolean useColorAsZ) {
         return paint(colorOne, colorTwo, new UnstructuredGrid(f),
-                25f, colorArrayName,null,null, useColorAsZ,null);
+                25f, colorArrayName, null, null, useColorAsZ, null);
     }
 
     /**
@@ -73,7 +75,7 @@ public class GridPainter3D implements Serializable {
             @ParamInfo(name = "min value (optional):", nullIsValid = true) Float min,
             @ParamInfo(name = "max value (optional):", nullIsValid = true) Float max,
             @ParamInfo(name = "show height:") Boolean useColorAsZ,
-            @ParamInfo(name = "scale height (optional):", nullIsValid=true) Float scaleZ) {
+            @ParamInfo(name = "scale height (optional):", nullIsValid = true) Float scaleZ) {
         return paint(colorOne, colorTwo, new UnstructuredGrid(f),
                 25f, colorArrayName, min, max, useColorAsZ, scaleZ);
     }
@@ -103,7 +105,7 @@ public class GridPainter3D implements Serializable {
             Color colorOne, Color colorTwo,
             UnstructuredGrid grid, Float maxLength, String colorArrayName) {
         return paint(colorOne, colorTwo, grid,
-                maxLength, colorArrayName, null, null, false,null);
+                maxLength, colorArrayName, null, null, false, null);
 
     }
 
@@ -155,6 +157,19 @@ public class GridPainter3D implements Serializable {
 //                System.out.println("colors: " + colors.length);
             }
         }
+        
+        System.out.print("Used Cell Types: ");
+        
+        Set<Byte> shownTypes = new HashSet<Byte>();
+        
+        for (byte b : types) {
+            if (!shownTypes.contains(b)) {
+                System.out.print(b + " ");
+                shownTypes.add(b);
+            }
+        }
+        
+        System.out.println("");
 
         // convert point data from one dimensional array to three dimensional
         // point array
@@ -179,7 +194,6 @@ public class GridPainter3D implements Serializable {
         float yMax = Float.MIN_VALUE;
         float zMax = Float.MIN_VALUE;
 
-
         for (float[] p : points) {
 
             for (int i = 0; i < 3; i++) {
@@ -188,7 +202,6 @@ public class GridPainter3D implements Serializable {
                 }
             }
 
-
             xMin = Math.min(xMin, p[0]);
             yMin = Math.min(yMin, p[1]);
             zMin = Math.min(zMin, p[2]);
@@ -196,7 +209,6 @@ public class GridPainter3D implements Serializable {
             xMax = Math.max(xMax, p[0]);
             yMax = Math.max(yMax, p[1]);
             zMax = Math.max(zMax, p[2]);
-
 
 //            System.out.println("P[0]: " + p[0] + " P[1]: " + p[1] + " P[2]: " + p[2]);
         }
@@ -234,7 +246,7 @@ public class GridPainter3D implements Serializable {
             cMax = rangeMax;
 
             // trim values to range
-            for (int cInd = 0; cInd < colors.length;cInd++) {
+            for (int cInd = 0; cInd < colors.length; cInd++) {
                 colors[cInd] = Math.max(cMin, colors[cInd]);
                 colors[cInd] = Math.min(cMax, colors[cInd]);
             }
@@ -328,10 +340,10 @@ public class GridPainter3D implements Serializable {
                 if (useColorAsZ) {
                     z = colors[pointIndex] - offsetZ - zLength / 2.f;
 
-                    if (scaleZ!=null) {
-                        z*=colorScale*scaleZ;
+                    if (scaleZ != null) {
+                        z *= colorScale * scaleZ;
                     } else {
-                        z*=colorScale*maxLength;
+                        z *= colorScale * maxLength;
                     }
                 }
 
@@ -345,6 +357,7 @@ public class GridPainter3D implements Serializable {
                             new Node(x, y, z,
                             new Color3f(new Color(r, g, b)));
                 } catch (Exception ex) {
+                    ex.printStackTrace(System.err);
 //                    System.out.println(
 //                            ">> color values: c="
 //                            + color * colorScale
@@ -354,23 +367,37 @@ public class GridPainter3D implements Serializable {
 
             connectivityOffset += elementSize;
 
-            // we only support triangles (type 5) and quads (type 9)
+            // we only support triangles (type 5), quads (type 9)
+            //and tetrahedrons (type 9)
             // (quads are represented by two triangles)
+            // (tetrahedrons are represented by four triangles)
             // otherwise we do nothing (the current element will be ignored)
-            if (type == 5 || type == 9) {
+            if (type == 5 || type == 9 || type == 10) {
 
                 // triangle
-                if (elementSize == 3) {
+                if (type == 5 && elementSize == 3) {
                     triangleArray.addTriangle(
                             new Triangle(nodes[0], nodes[1], nodes[2]));
                 }
 
                 // quad
-                if (elementSize == 4) {
+                if (type == 9 && elementSize == 4) {
                     triangleArray.addTriangle(
                             new Triangle(nodes[0], nodes[1], nodes[2]));
                     triangleArray.addTriangle(
                             new Triangle(nodes[0], nodes[2], nodes[3]));
+                }
+
+                // tetra
+                if (type == 10 && elementSize == 4) {
+                    triangleArray.addTriangle(
+                            new Triangle(nodes[0], nodes[1], nodes[2]));
+                    triangleArray.addTriangle(
+                            new Triangle(nodes[0], nodes[1], nodes[3]));
+                    triangleArray.addTriangle(
+                            new Triangle(nodes[0], nodes[2], nodes[3]));
+                    triangleArray.addTriangle(
+                            new Triangle(nodes[1], nodes[2], nodes[3]));
                 }
             }
 

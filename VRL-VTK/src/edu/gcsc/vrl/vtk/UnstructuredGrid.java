@@ -70,7 +70,7 @@ public class UnstructuredGrid implements Serializable {
 
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
     }
 
