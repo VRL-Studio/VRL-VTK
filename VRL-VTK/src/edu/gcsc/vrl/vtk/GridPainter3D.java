@@ -333,7 +333,7 @@ public class GridPainter3D implements Serializable {
 
         // compute geometry scale
         float scale = maxLength / Math.max(Math.max(xLength, yLength), zLength);
-
+        
         for (int i = 0; i < offsets.length; i++) {
 
             int type = types[i];
@@ -443,7 +443,7 @@ public class GridPainter3D implements Serializable {
 
         // create the final geometry (with vertex coloring)
         VGeometry3D result = new VGeometry3D(
-                triangleArray, Color.black, Color.white, 1.f, true, true);
+                triangleArray, Color.black, Color.white, 1.f, true, true, showVolume);
 
         return result;
     }
