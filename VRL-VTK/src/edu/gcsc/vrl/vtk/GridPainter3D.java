@@ -79,6 +79,27 @@ public class GridPainter3D implements Serializable {
         return paint(colorOne, colorTwo, new UnstructuredGrid(f),
                 25f, colorArrayName, min, max, useColorAsZ, scaleZ);
     }
+    
+    /**
+     *
+     * @param colorOne
+     * @param colorTwo
+     * @param grid
+     * @return
+     */
+    @MethodInfo()
+    public VGeometry3D paint(
+            Color colorOne, Color colorTwo,
+            @ParamInfo(style = "load-dialog") File f,
+            @ParamInfo(name = "color array:") String colorArrayName,
+            @ParamInfo(name = "min value (optional):", nullIsValid = true) Float min,
+            @ParamInfo(name = "max value (optional):", nullIsValid = true) Float max,
+            @ParamInfo(name = "show volume:") Boolean showVolume,
+            @ParamInfo(name = "show height:") Boolean useColorAsZ,
+            @ParamInfo(name = "scale height (optional):", nullIsValid = true) Float scaleZ) {
+        return paint(colorOne, colorTwo, new UnstructuredGrid(f),
+                25f, colorArrayName, min, max, useColorAsZ, scaleZ, showVolume);
+    }
 
     /**
      *
@@ -108,7 +129,7 @@ public class GridPainter3D implements Serializable {
                 maxLength, colorArrayName, null, null, false, null);
 
     }
-
+    
     /**
      *
      * @param colorOne
@@ -121,6 +142,23 @@ public class GridPainter3D implements Serializable {
             Color colorOne, Color colorTwo,
             UnstructuredGrid grid, Float maxLength, String colorArrayName,
             Float rangeMin, Float rangeMax, Boolean useColorAsZ, Float scaleZ) {
+        return paint(colorOne, colorTwo, grid, maxLength, colorArrayName,
+                rangeMin, rangeMax, useColorAsZ, scaleZ, true);
+    }
+
+    /**
+     *
+     * @param colorOne
+     * @param colorTwo
+     * @param grid
+     * @param maxLength
+     * @return
+     */
+    public VGeometry3D paint(
+            Color colorOne, Color colorTwo,
+            UnstructuredGrid grid, Float maxLength, String colorArrayName,
+            Float rangeMin, Float rangeMax, Boolean useColorAsZ, Float scaleZ,
+            boolean showVolume) {
 
         // evaluate data arrays and convert array data
         float[] pointData = null;
@@ -368,10 +406,10 @@ public class GridPainter3D implements Serializable {
             connectivityOffset += elementSize;
 
             // we only support triangles (type 5), quads (type 9)
-            //and tetrahedrons (type 9)
+            //and tetrahedrons (type 10)
             // (quads are represented by two triangles)
             // (tetrahedrons are represented by four triangles)
-            // otherwise we do nothing (the current element will be ignored)
+            // otherwise we do nothing (the current element will then be ignored)
             if (type == 5 || type == 9 || type == 10) {
 
                 // triangle
@@ -389,7 +427,7 @@ public class GridPainter3D implements Serializable {
                 }
 
                 // tetra
-                if (type == 10 && elementSize == 4) {
+                if (type == 10 && elementSize == 4 && showVolume) {
                     triangleArray.addTriangle(
                             new Triangle(nodes[0], nodes[1], nodes[2]));
                     triangleArray.addTriangle(
