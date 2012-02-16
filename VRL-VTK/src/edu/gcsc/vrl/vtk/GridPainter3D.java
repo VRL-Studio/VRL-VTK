@@ -334,6 +334,9 @@ public class GridPainter3D implements Serializable {
         // compute geometry scale
         float scale = maxLength / Math.max(Math.max(xLength, yLength), zLength);
         
+        // determines whether volume elements are defined in this grid
+        boolean hasVolumeElements = false;
+        
         for (int i = 0; i < offsets.length; i++) {
 
             int type = types[i];
@@ -437,13 +440,17 @@ public class GridPainter3D implements Serializable {
                     triangleArray.addTriangle(
                             new Triangle(nodes[1], nodes[2], nodes[3]));
                 }
+                
+                // tetra currently is the only supported volume element
+                hasVolumeElements = hasVolumeElements || type == 10;
             }
 
         }
 
         // create the final geometry (with vertex coloring)
         VGeometry3D result = new VGeometry3D(
-                triangleArray, Color.black, Color.white, 1.f, true, true, showVolume);
+                triangleArray, Color.black, Color.white, 1.f, true, true, 
+                showVolume && hasVolumeElements);
 
         return result;
     }

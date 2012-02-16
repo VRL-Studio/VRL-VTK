@@ -14,7 +14,7 @@ import java.awt.image.BufferedImage;
 public class Configurator extends VPluginConfigurator{
 
     public Configurator() {
-        setIdentifier(new PluginIdentifier("VRL-VTK", "0.1"));
+        setIdentifier(new PluginIdentifier("VRL-VTK", "0.2"));
         setDescription("Simple VTK Viewer");
     }
 
