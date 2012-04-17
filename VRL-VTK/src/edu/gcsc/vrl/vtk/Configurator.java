@@ -26,6 +26,8 @@ public class Configurator extends VPluginConfigurator{
         setIdentifier(new PluginIdentifier("VRL-VTK", "0.2"));
         setDescription("Simple VTK Viewer");
         exportPackage("edu.gcsc.vrl.vtk");
+        
+        addDependency(new PluginDependency("VRL", "0.4.0", "0.4.x"));
     }
 
     public void register(PluginAPI api) {
