@@ -23,8 +23,22 @@ public class VTKOutputType extends TypeRepresentationBase {
 //    private VTKView view;
     private VTKJPanel view;
 //    private JFrame frame;
+    
+    private static int NUMBER_OF_INSTANCES;
+    private static int MAX_NUMBER_OF_INSTANCES = 16;
 
     public VTKOutputType() {
+        
+        NUMBER_OF_INSTANCES++;
+        
+        if (NUMBER_OF_INSTANCES > MAX_NUMBER_OF_INSTANCES) {
+            NUMBER_OF_INSTANCES--;
+            throw new IllegalStateException(
+                    getClass()
+                    + " only supports up to "
+                    + MAX_NUMBER_OF_INSTANCES
+                    + " number of instances!");
+        }
 
         VSwingUtil.invokeAndWait(new Runnable() {
 
@@ -99,6 +113,8 @@ public class VTKOutputType extends TypeRepresentationBase {
 
     @Override
     public void dispose() {
+        NUMBER_OF_INSTANCES--;
+        
         super.dispose();
 
         if (view != null) {
