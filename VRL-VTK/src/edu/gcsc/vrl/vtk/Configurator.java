@@ -22,8 +22,8 @@ import vtk.vtkNativeLibrary;
  *
  * @author Michael Hoffer <info@michaelhoffer.de>
  */
-public class Configurator extends VPluginConfigurator{
-    
+public class Configurator extends VPluginConfigurator {
+
     private File templateProjectSrc;
 
     public Configurator() {
@@ -32,20 +32,20 @@ public class Configurator extends VPluginConfigurator{
         exportPackage("edu.gcsc.vrl.vtk");
         exportPackage("vtk");
         exportPackage("eu.mihosoft.vtk");
-        
+
         addDependency(new PluginDependency("VRL", "0.4.1", "0.4.x"));
-        
+
         setLoadNativeLibraries(false);
     }
 
     public void register(PluginAPI api) {
-        VPluginAPI vapi = (VPluginAPI)api;
-        
+        VPluginAPI vapi = (VPluginAPI) api;
+
         vapi.addComponent(GridPainter3D.class);
         vapi.addComponent(VTKSampleComponent.class);
-        
+
         vapi.addTypeRepresentation(VTKOutputType.class);
-        
+
         vapi.addAction(new VAction("VTK-Test") {
 
             @Override
@@ -61,7 +61,7 @@ public class Configurator extends VPluginConfigurator{
     }
 
     public void init(InitPluginAPI iApi) {
-       templateProjectSrc = new File(iApi.getResourceFolder(), "vtk-template01.vrlp");
+        templateProjectSrc = new File(iApi.getResourceFolder(), "vtk-template01.vrlp");
 
         if (!templateProjectSrc.exists()) {
             InputStream in = Configurator.class.getResourceAsStream(
@@ -95,17 +95,17 @@ public class Configurator extends VPluginConfigurator{
                 return null;
             }
         });
-        
+
         //
-        
-        String path  = getNativeLibFolder().getAbsolutePath();
-        
+
+        String path = getNativeLibFolder().getAbsolutePath();
+
         try {
             VSysUtil.addNativeLibraryPath(path);
         } catch (IOException ex) {
             Logger.getLogger(Configurator.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         if (!vtkNativeLibrary.LoadAllNativeLibraries()) {
             for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
                 if (!lib.IsLoaded()) {
@@ -116,8 +116,7 @@ public class Configurator extends VPluginConfigurator{
             System.out.println("Make sure the search path is correct: ");
             System.out.println(System.getProperty("java.library.path"));
         }
-        
+
         vtkNativeLibrary.DisableOutputWindow(null);
     }
-    
 }

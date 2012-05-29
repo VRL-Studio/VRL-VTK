@@ -26,45 +26,51 @@ public class VTKOutputType extends TypeRepresentationBase {
 
     public VTKOutputType() {
 
-//        VSwingUtil.invokeLater(new Runnable() {
-//
-//            @Override
-//            public void run() {
+        VSwingUtil.invokeAndWait(new Runnable() {
+
+            @Override
+            public void run() {
                 initialize();
-//            }
-//        });
+            }
+        });
     }
 
     private void initialize() {
 //        view = new VTKView(this);
-        
+
         view = new VTKJPanel();
         view.setMinimumSize(new Dimension(300, 200));
         view.getRenderer().GetActiveCamera().Dolly(0.2);
         view.setOpaque(false);
 
-        ResizableContainer cont = new ResizableContainer(view, this);        
+        ResizableContainer cont = new ResizableContainer(view, this);
         add(cont);
-        
+
         cont.setMinimumSize(new Dimension(300, 200));
         cont.setPreferredSize(new Dimension(300, 200));
-
     }
 
     @Override
     public void setViewValue(final Object o) {
-        
-        view.repaint();
 
-        if (!(o instanceof Visualization)) {
-            return;
-        }
+        VSwingUtil.invokeAndWait(new Runnable() {
 
-        Visualization v = (Visualization) o;
-        v.registerWithRenderer(view.getRenderer());
-        view.setBackground(v.getBackground());
+            public void run() {
+                if (!(o instanceof Visualization)) {
+                    return;
+                }
 
-        viewValue = v;
+                final Visualization v = (Visualization) o;
+                v.registerWithRenderer(view.getRenderer());
+
+                viewValue = v;
+
+                view.setBackground(v.getBackground());
+                view.repaint();
+            }
+        });
+
+
     }
 
     @Override
@@ -90,12 +96,12 @@ public class VTKOutputType extends TypeRepresentationBase {
         viewValue = null;
     }
 
-//    @Override
-//    public void dispose() {
-//        super.dispose();
-//
-//        if (view != null) {
-//            view.dispose();
-//        }
-//    }
+    @Override
+    public void dispose() {
+        super.dispose();
+
+        if (view != null) {
+            view.dispose();
+        }
+    }
 }
