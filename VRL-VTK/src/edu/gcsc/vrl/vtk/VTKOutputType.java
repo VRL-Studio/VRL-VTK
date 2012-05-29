@@ -66,6 +66,7 @@ public class VTKOutputType extends TypeRepresentationBase {
                 viewValue = v;
 
                 view.setBackground(v.getBackground());
+                view.contentChanged();
                 view.repaint();
             }
         });
