@@ -113,12 +113,13 @@ public class VTKOutputType extends TypeRepresentationBase {
 
     @Override
     public void dispose() {
-        NUMBER_OF_INSTANCES--;
         
         super.dispose();
 
         if (view != null) {
             view.dispose();
+            view = null;
+            NUMBER_OF_INSTANCES--;
         }
     }
 }
