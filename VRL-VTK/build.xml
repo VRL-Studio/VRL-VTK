@@ -75,9 +75,56 @@
     <property file="build.properties"/>
     
     <target name="-post-jar">
-        <echo message="Copying ${dist.jar} to ${vrl.dir}/plugin-updates"/>
+        <!-- Change the value of this property to be the name of your JAR,
+minus the .jar extension. It should not have spaces.
+<property name="store.jar.name" value="MyJarName"/>
+-->
+        <property name="store.jar.name" value="VRL-VTK"/>
+
+
+<!-- don't edit below this line -->
+
+        <property name="store.dir" value="dist-single"/>
+        <property name="store.jar" value="${store.dir}/${store.jar.name}.jar"/>
+
+        <echo message="Packaging ${application.title} into a single JAR at ${store.jar}"/>
+
+        <delete dir="${store.dir}"/>
+        <mkdir dir="${store.dir}"/>
+
+        <jar destfile="${store.dir}/temp_final.jar" filesetmanifest="skip">
+            <zipgroupfileset dir="dist"
+                             includes="*.jar"
+                             excludes="VRL.jar"/>
+            <zipgroupfileset dir="dist/lib"
+                             includes="*.jar"
+                             excludes="VRL.jar"/>
+
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+            </manifest>
+        </jar>
+
+        <zip destfile="${store.jar}">
+            <zipfileset src="${store.dir}/temp_final.jar"
+                        excludes="META-INF/*.SF, META-INF/*.DSA, META-INF/*.RSA"/>
+        </zip>
+
+        <delete file="${store.dir}/temp_final.jar"/>
+
+        <!--Copy VRL.jar to dist and delete lib folder-->
+        <copy todir="dist">
+            <fileset dir="dist-single" includes="**/*"/>
+        </copy>
+
+        <delete dir="dist-single"/>
+        <delete dir="dist/lib"/>
+        
+        
+        
+        <echo message="Copying ${dist.jar} to ${vrl.dir}/plugins"/>
         <copy 
-        file="${dist.jar}" 
-        todir="${vrl.dir}/plugin-updates"/>
+            file="${dist.jar}" 
+            todir="${vrl.dir}/plugin-updates"/>
     </target>
 </project>
