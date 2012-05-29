@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import vtk.vtkNativeLibrary;
 
 /**
  *
@@ -23,18 +24,27 @@ public class Configurator extends VPluginConfigurator{
     private File templateProjectSrc;
 
     public Configurator() {
-        setIdentifier(new PluginIdentifier("VRL-VTK", "0.2"));
-        setDescription("Simple VTK Viewer");
+        setIdentifier(new PluginIdentifier("VRL-VTK", "0.3"));
+        setDescription("VTK Integration Plugin");
         exportPackage("edu.gcsc.vrl.vtk");
+        exportPackage("vtk");
+        exportPackage("eu.mihosoft.vtk");
         
-        addDependency(new PluginDependency("VRL", "0.4.0", "0.4.x"));
+        addDependency(new PluginDependency("VRL", "0.4.1", "0.4.x"));
+        
+        setLoadNativeLibraries(false);
     }
 
     public void register(PluginAPI api) {
         VPluginAPI vapi = (VPluginAPI)api;
+        
         vapi.addComponent(GridPainter3D.class);
+        vapi.addComponent(VTKSampleComponent.class);
+        
+        vapi.addTypeRepresentation(VTKOutputType.class);
     }
 
+    @Override
     public void unregister(PluginAPI api) {
 //        throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -74,6 +84,29 @@ public class Configurator extends VPluginConfigurator{
                 return null;
             }
         });
+        
+        //
+        
+        String path  = getNativeLibFolder().getAbsolutePath();
+        
+        try {
+            VSysUtil.addNativeLibraryPath(path);
+        } catch (IOException ex) {
+            Logger.getLogger(Configurator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        if (!vtkNativeLibrary.LoadAllNativeLibraries()) {
+            for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
+                if (!lib.IsLoaded()) {
+                    System.out.println(lib.GetLibraryName() + " not loaded");
+                }
+            }
+
+            System.out.println("Make sure the search path is correct: ");
+            System.out.println(System.getProperty("java.library.path"));
+        }
+        
+        vtkNativeLibrary.DisableOutputWindow(null);
     }
     
 }
