@@ -6,6 +6,9 @@ package edu.gcsc.vrl.vtk;
 
 import eu.mihosoft.vrl.io.IOUtil;
 import eu.mihosoft.vrl.system.*;
+import eu.mihosoft.vrl.visual.ActionDelelator;
+import eu.mihosoft.vrl.visual.VAction;
+import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -42,6 +45,14 @@ public class Configurator extends VPluginConfigurator{
         vapi.addComponent(VTKSampleComponent.class);
         
         vapi.addTypeRepresentation(VTKOutputType.class);
+        
+        vapi.addAction(new VAction("VTK-Test") {
+
+            @Override
+            public void actionPerformed(ActionEvent e, Object owner) {
+                SphereInteractorPanel.main(new String[0]);
+            }
+        }, ActionDelelator.TOOL_MENU);
     }
 
     @Override
