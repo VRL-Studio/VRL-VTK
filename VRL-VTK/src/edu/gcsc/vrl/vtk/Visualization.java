@@ -16,7 +16,7 @@ import vtk.vtkRenderer;
 public class Visualization {
     private Collection<vtkActor> actors = new ArrayList<vtkActor>();
     
-    private Color background = new Color(0,0,0);
+    private Color background = new Color(120,120,120);
 
     public Visualization(vtkActor... actors) {
         this.actors.addAll(Arrays.asList(actors));
