@@ -7,8 +7,10 @@ package edu.gcsc.vrl.vtk;
 import eu.mihosoft.vrl.annotation.TypeInfo;
 import eu.mihosoft.vrl.reflection.TypeRepresentationBase;
 import eu.mihosoft.vrl.visual.ResizableContainer;
+import eu.mihosoft.vrl.visual.VContainer;
 import eu.mihosoft.vrl.visual.VSwingUtil;
 import eu.mihosoft.vtk.VTKJPanel;
+import groovy.lang.Script;
 import java.awt.Color;
 import java.awt.Dimension;
 
@@ -21,16 +23,15 @@ public class VTKOutputType extends TypeRepresentationBase {
 
     private Visualization viewValue;
 //    private VTKView view;
-    private VTKJPanel view;
+    private VTKCanvas3D view;
 //    private JFrame frame;
-    
     private static int NUMBER_OF_INSTANCES;
     private static int MAX_NUMBER_OF_INSTANCES = 16;
 
     public VTKOutputType() {
-        
+
         NUMBER_OF_INSTANCES++;
-        
+
         if (NUMBER_OF_INSTANCES > MAX_NUMBER_OF_INSTANCES) {
             NUMBER_OF_INSTANCES--;
             throw new IllegalStateException(
@@ -52,16 +53,27 @@ public class VTKOutputType extends TypeRepresentationBase {
     private void initialize() {
 //        view = new VTKView(this);
 
-        view = new VTKJPanel();
-        view.setMinimumSize(new Dimension(300, 200));
+//        view = new VTKJPanel();
+
+        view = new VTKCanvas3D(this);
+
+        view.setMinimumSize(new Dimension(160, 120));
+        view.setMaximumSize(new Dimension(600, 600));
         view.getRenderer().GetActiveCamera().Dolly(0.2);
         view.setOpaque(false);
 
-        ResizableContainer cont = new ResizableContainer(view, this);
+        VContainer cont = new VContainer();
+        cont.add(view);
+        
         add(cont);
 
-        cont.setMinimumSize(new Dimension(300, 200));
-        cont.setPreferredSize(new Dimension(300, 200));
+        cont.setMinimumSize(new Dimension(160, 120));
+        cont.setPreferredSize(new Dimension(160, 120));
+        cont.setMaximumSize(new Dimension(600, 600));
+        
+        setValueOptions("width=160;height=120;blurValue=0.7F;");
+        
+        this.setInputComponent(cont);
     }
 
     @Override
@@ -110,10 +122,54 @@ public class VTKOutputType extends TypeRepresentationBase {
 
         viewValue = null;
     }
+    
+    /**
+     * Defines the Vcanvas3D size by evaluating a groovy script.
+     * @param script the script to evaluate
+     */
+    private void setVCanvas3DSizeFromValueOptions(Script script) {
+        Integer w = null;
+        Integer h = null;
+        Object property = null;
+
+        if (getValueOptions() != null) {
+
+            if (getValueOptions().contains("width")) {
+                property = script.getProperty("width");
+            }
+
+            if (property != null) {
+                w = (Integer) property;
+            }
+
+            property = null;
+
+            if (getValueOptions().contains("height")) {
+                property = script.getProperty("height");
+            }
+
+            if (property != null) {
+                h = (Integer) property;
+            }
+        }
+
+        if (w != null && h != null) {
+            // TODO find out why offset is 10
+            view.setPreferredSize(new Dimension(w - 10, h));
+            view.setSize(new Dimension(w - 10, h));
+        }
+
+        System.out.println(getValueOptions());
+    }
+    
+     @Override
+    protected void evaluationRequest(Script script) {
+        setVCanvas3DSizeFromValueOptions(script);
+    }
 
     @Override
     public void dispose() {
-        
+
         super.dispose();
 
         if (view != null) {
