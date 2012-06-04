@@ -23,7 +23,7 @@ public class VTKOutputType extends TypeRepresentationBase {
 
     private Visualization viewValue;
 //    private VTKView view;
-    private VTKCanvas3D view;
+    private VTKJPanel view;
 //    private JFrame frame;
     private static int NUMBER_OF_INSTANCES;
     private static int MAX_NUMBER_OF_INSTANCES = 16;
