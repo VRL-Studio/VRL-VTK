@@ -9,16 +9,18 @@ import java.util.Arrays;
 import java.util.Collection;
 import vtk.vtkActor;
 import vtk.vtkActor2D;
+import vtk.vtkLookupTable;
 import vtk.vtkRenderer;
 /**
  *
  * @author Michael Hoffer <info@michaelhoffer.de>
  */
 public class Visualization {
-    private Collection<vtkActor> actors = new ArrayList<vtkActor>();
-    private Collection<vtkActor2D> actors2D = new ArrayList<vtkActor2D>();
+    private transient Collection<vtkActor> actors = new ArrayList<vtkActor>();
+    private transient Collection<vtkActor2D> actors2D = new ArrayList<vtkActor2D>();
+    private transient Color background = new Color(120,120,120);
     
-    private Color background = new Color(120,120,120);
+    private transient vtkLookupTable lookupTable;
 
     public Visualization(vtkActor... actors) {
         this.actors.addAll(Arrays.asList(actors));
@@ -80,6 +82,20 @@ public class Visualization {
         for (vtkActor2D actor : actors2D) {
             renderer.RemoveActor2D(actor);
         }
+    }
+
+    /**
+     * @return the lookupTable
+     */
+    public vtkLookupTable getLookupTable() {
+        return lookupTable;
+    }
+
+    /**
+     * @param lookupTable the lookupTable to set
+     */
+    public void setLookupTable(vtkLookupTable lookupTable) {
+        this.lookupTable = lookupTable;
     }
 
 }

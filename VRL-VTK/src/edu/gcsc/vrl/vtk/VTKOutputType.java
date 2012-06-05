@@ -18,8 +18,7 @@ import java.awt.Dimension;
 import java.awt.event.*;
 import javax.media.j3d.Transform3D;
 import javax.swing.JMenuItem;
-import vtk.vtkAxesActor;
-import vtk.vtkOrientationMarkerWidget;
+import vtk.*;
 
 /**
  *
@@ -37,6 +36,8 @@ public class VTKOutputType extends TypeRepresentationBase {
     public static final String POSITION_KEY = "position";
     public static final String FOCAL_POINT_KEY = "focal-point";
     public static final String ROLL_KEY = "roll";
+    
+    private vtkScalarBarActor scalarBar;
 
     public VTKOutputType() {
 
@@ -83,6 +84,7 @@ public class VTKOutputType extends TypeRepresentationBase {
         this.setInputComponent(cont);
 
         addAxes();
+        addScalarBar();
         addMenu();
     }
 
@@ -102,6 +104,27 @@ public class VTKOutputType extends TypeRepresentationBase {
         axesOrientation.SetViewport(0, 0, 0.25, 0.25);
         axesOrientation.SetOutlineColor(1.0, 1.0, 1.0);
         axesOrientation.SetEnabled(1);
+    }
+
+    private void addScalarBar() {
+        scalarBar = new vtkScalarBarActor();
+        scalarBar.SetNumberOfLabels(4);
+
+        vtkLookupTable hueLut = new vtkLookupTable();
+        hueLut.SetTableRange(0, 1);
+        hueLut.SetHueRange(0, 1);
+        hueLut.SetSaturationRange(1, 1);
+        hueLut.SetValueRange(1, 1);
+        hueLut.Build();
+        
+
+        scalarBar.SetLookupTable(hueLut);
+        vtkScalarBarWidget widget = new vtkScalarBarWidget();
+        
+        widget.SetInteractor(view.getPanel().getRenderWindowInteractor());
+        widget.SetScalarBarActor(scalarBar);
+        widget.SetEnabled(1);
+        
     }
 
     private void addMenu() {
@@ -139,6 +162,8 @@ public class VTKOutputType extends TypeRepresentationBase {
 
                 final Visualization v = (Visualization) o;
                 v.registerWithRenderer(view.getRenderer());
+                
+                scalarBar.SetLookupTable(v.getLookupTable());
 
                 viewValue = v;
 
@@ -167,6 +192,8 @@ public class VTKOutputType extends TypeRepresentationBase {
             public void run() {
                 if (viewValue != null) {
                     viewValue.unregisterFromRenderer(view.getRenderer());
+                    view.contentChanged();
+                    view.repaint();
                 }
             }
         });
@@ -250,7 +277,7 @@ public class VTKOutputType extends TypeRepresentationBase {
         if (roll != null) {
             view.getRenderer().GetActiveCamera().SetRoll(roll);
         }
-        
+
         view.contentChanged();
         view.repaint();
     }
