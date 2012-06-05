@@ -25,7 +25,7 @@ import javax.swing.JPopupMenu;
  *
  * @author Michael Hoffer <info@michaelhoffer.de>
  */
-public class VTKCanvas3D extends VTKJPanel implements ComponentListener{
+public class VTKCanvas3D extends VTKJPanel implements ComponentListener {
 
     private static final long serialVersionUID = -1672983251248240258L;
     /**
@@ -122,7 +122,6 @@ public class VTKCanvas3D extends VTKJPanel implements ComponentListener{
 //        super.setBounds(xChecked, yChecked, wChecked, hChecked);
 //        sizeChanged = true;
 //    }
-
 //    /**
 //     * Applies blur filter after rendering.
 //     *
@@ -172,7 +171,6 @@ public class VTKCanvas3D extends VTKJPanel implements ComponentListener{
 //            super.paintComponent(g2);
 //        }
 //    }
-
     @Override
     public void paintComponent(Graphics g) {
 
@@ -497,7 +495,7 @@ public class VTKCanvas3D extends VTKJPanel implements ComponentListener{
 //        postRenderTask();
         typeRepresentation.setValueOptions("width=" + getWidth() + ";"
                 + "height=" + getHeight());
-        
+
         System.out.println("SIZE: " + getSize());
     }
 
@@ -559,9 +557,13 @@ public class VTKCanvas3D extends VTKJPanel implements ComponentListener{
 //        return menu;
 //    }
 
-   
+    /**
+     * @return the menu
+     */
+    public JPopupMenu getMenu() {
+        return menu;
+    }
 }
-
 ///**
 // * Enables and disables render optimization.
 // *

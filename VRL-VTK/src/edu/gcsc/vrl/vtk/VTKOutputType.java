@@ -5,14 +5,21 @@
 package edu.gcsc.vrl.vtk;
 
 import eu.mihosoft.vrl.annotation.TypeInfo;
+import eu.mihosoft.vrl.reflection.CustomParamData;
 import eu.mihosoft.vrl.reflection.TypeRepresentationBase;
 import eu.mihosoft.vrl.visual.ResizableContainer;
 import eu.mihosoft.vrl.visual.VContainer;
+import eu.mihosoft.vrl.visual.VGraphicsUtil;
 import eu.mihosoft.vrl.visual.VSwingUtil;
 import eu.mihosoft.vtk.VTKJPanel;
 import groovy.lang.Script;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.event.*;
+import javax.media.j3d.Transform3D;
+import javax.swing.JMenuItem;
+import vtk.vtkAxesActor;
+import vtk.vtkOrientationMarkerWidget;
 
 /**
  *
@@ -23,10 +30,13 @@ public class VTKOutputType extends TypeRepresentationBase {
 
     private Visualization viewValue;
 //    private VTKView view;
-    private VTKJPanel view;
+    private VTKCanvas3D view;
 //    private JFrame frame;
     private static int NUMBER_OF_INSTANCES;
     private static int MAX_NUMBER_OF_INSTANCES = 16;
+    public static final String POSITION_KEY = "position";
+    public static final String FOCAL_POINT_KEY = "focal-point";
+    public static final String ROLL_KEY = "roll";
 
     public VTKOutputType() {
 
@@ -51,9 +61,6 @@ public class VTKOutputType extends TypeRepresentationBase {
     }
 
     private void initialize() {
-//        view = new VTKView(this);
-
-//        view = new VTKJPanel();
 
         view = new VTKCanvas3D(this);
 
@@ -64,16 +71,60 @@ public class VTKOutputType extends TypeRepresentationBase {
 
         VContainer cont = new VContainer();
         cont.add(view);
-        
+
         add(cont);
 
         cont.setMinimumSize(new Dimension(160, 120));
         cont.setPreferredSize(new Dimension(160, 120));
         cont.setMaximumSize(new Dimension(600, 600));
-        
+
         setValueOptions("width=160;height=120;blurValue=0.7F;");
-        
+
         this.setInputComponent(cont);
+
+        addAxes();
+        addMenu();
+    }
+
+    private void addAxes() {
+        vtkAxesActor axesActor = new vtkAxesActor();
+        axesActor.AxisLabelsOn();
+        axesActor.SetShaftTypeToCylinder();
+        axesActor.SetCylinderRadius(0.05);
+        axesActor.SetConeRadius(0.5);
+        axesActor.SetNormalizedTipLength(0.3, 0.3, 0.3);
+        axesActor.SetConeResolution(32);
+        axesActor.SetAxisLabels(0);
+        vtkOrientationMarkerWidget axesOrientation = new vtkOrientationMarkerWidget();
+        axesOrientation.SetOrientationMarker(axesActor);
+        axesOrientation.SetInteractor(view.getPanel().getRenderWindowInteractor());
+        axesOrientation.InteractiveOff();
+        axesOrientation.SetViewport(0, 0, 0.25, 0.25);
+        axesOrientation.SetOutlineColor(1.0, 1.0, 1.0);
+        axesOrientation.SetEnabled(1);
+    }
+
+    private void addMenu() {
+        JMenuItem resetItem = new JMenuItem("Reset View");
+        resetItem.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                view.resetCamera();
+            }
+        });
+
+        view.getMenu().add(resetItem);
+
+        view.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+                if (e.getButton() == MouseEvent.BUTTON3 && view.getMenu() != null) {
+                    view.getMenu().show(view, e.getX(), e.getY());
+                }
+            }
+        });
     }
 
     @Override
@@ -122,9 +173,10 @@ public class VTKOutputType extends TypeRepresentationBase {
 
         viewValue = null;
     }
-    
+
     /**
      * Defines the Vcanvas3D size by evaluating a groovy script.
+     *
      * @param script the script to evaluate
      */
     private void setVCanvas3DSizeFromValueOptions(Script script) {
@@ -161,10 +213,46 @@ public class VTKOutputType extends TypeRepresentationBase {
 
         System.out.println(getValueOptions());
     }
-    
-     @Override
+
+    @Override
     protected void evaluationRequest(Script script) {
         setVCanvas3DSizeFromValueOptions(script);
+    }
+
+    @Override
+    public CustomParamData getCustomData() {
+
+        CustomParamData result = super.getCustomData();
+
+        double[] pos = view.getRenderer().GetActiveCamera().GetPosition();
+        double[] focal = view.getRenderer().GetActiveCamera().GetFocalPoint();
+        double roll = view.getRenderer().GetActiveCamera().GetRoll();
+
+        result.put(POSITION_KEY, pos);
+        result.put(FOCAL_POINT_KEY, focal);
+        result.put(ROLL_KEY, roll);
+
+        return result;
+    }
+
+    @Override
+    public void evaluateCustomParamData() {
+
+        double[] pos = (double[]) super.getCustomData().get(POSITION_KEY);
+        double[] focal = (double[]) super.getCustomData().get(FOCAL_POINT_KEY);
+        Double roll = (Double) super.getCustomData().get(ROLL_KEY);
+        if (pos != null) {
+            view.getRenderer().GetActiveCamera().SetPosition(pos);
+        }
+        if (focal != null) {
+            view.getRenderer().GetActiveCamera().SetFocalPoint(focal);
+        }
+        if (roll != null) {
+            view.getRenderer().GetActiveCamera().SetRoll(roll);
+        }
+        
+        view.contentChanged();
+        view.repaint();
     }
 
     @Override
