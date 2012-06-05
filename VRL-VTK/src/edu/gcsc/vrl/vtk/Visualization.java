@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import vtk.vtkActor;
+import vtk.vtkActor2D;
 import vtk.vtkRenderer;
 /**
  *
@@ -15,6 +16,7 @@ import vtk.vtkRenderer;
  */
 public class Visualization {
     private Collection<vtkActor> actors = new ArrayList<vtkActor>();
+    private Collection<vtkActor2D> actors2D = new ArrayList<vtkActor2D>();
     
     private Color background = new Color(120,120,120);
 
@@ -22,13 +24,28 @@ public class Visualization {
         this.actors.addAll(Arrays.asList(actors));
     }
     
-        
     public void addActor(vtkActor a) {
         actors.add(a);
     }
     
+    public void addActors(vtkActor... a) {
+        actors.addAll(Arrays.asList(a));
+    }
+    
+    public void addActor2D(vtkActor2D a) {
+        actors2D.add(a);
+    }
+    
+    public void addActors2D(vtkActor2D... a) {
+        actors2D.addAll(Arrays.asList(a));
+    }
+    
     public boolean removeActor(vtkActor a) {
         return actors.remove(a);
+    }
+    
+    public boolean removeActor2D(vtkActor2D a) {
+        return actors2D.remove(a);
     }
 
     /**
@@ -49,11 +66,19 @@ public class Visualization {
         for (vtkActor actor : actors) {
             renderer.AddActor(actor);
         }
+        
+        for (vtkActor2D actor : actors2D) {
+            renderer.AddActor2D(actor);
+        }
     }
     
     void unregisterFromRenderer(vtkRenderer renderer) {
         for (vtkActor actor : actors) {
             renderer.RemoveActor(actor);
+        }
+        
+        for (vtkActor2D actor : actors2D) {
+            renderer.RemoveActor2D(actor);
         }
     }
 
