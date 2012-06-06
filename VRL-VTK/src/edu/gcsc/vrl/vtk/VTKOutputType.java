@@ -36,8 +36,9 @@ public class VTKOutputType extends TypeRepresentationBase {
     public static final String POSITION_KEY = "position";
     public static final String FOCAL_POINT_KEY = "focal-point";
     public static final String ROLL_KEY = "roll";
-    
     private vtkScalarBarActor scalarBar;
+    private vtkScalarBarWidget scalarBarWidget;
+    private vtkTextWidget titleWidget;
 
     public VTKOutputType() {
 
@@ -83,8 +84,9 @@ public class VTKOutputType extends TypeRepresentationBase {
 
         this.setInputComponent(cont);
 
-        addAxes();
-        addScalarBar();
+//        addAxes();
+//        addScalarBar();
+//        addTitle("Plot");
         addMenu();
     }
 
@@ -116,15 +118,38 @@ public class VTKOutputType extends TypeRepresentationBase {
         hueLut.SetSaturationRange(1, 1);
         hueLut.SetValueRange(1, 1);
         hueLut.Build();
-        
 
         scalarBar.SetLookupTable(hueLut);
-        vtkScalarBarWidget widget = new vtkScalarBarWidget();
-        
-        widget.SetInteractor(view.getPanel().getRenderWindowInteractor());
-        widget.SetScalarBarActor(scalarBar);
-        widget.SetEnabled(1);
-        
+        scalarBarWidget = new vtkScalarBarWidget();
+
+        scalarBarWidget.SetInteractor(view.getPanel().getRenderWindowInteractor());
+        scalarBarWidget.SetScalarBarActor(scalarBar);
+        scalarBarWidget.SetEnabled(0);
+    }
+
+    private void addTitle(String title) {
+        vtkTextActor textActor = new vtkTextActor();
+        textActor.SetInput(title);
+
+        textActor.GetTextProperty().SetColor(1, 1, 1);
+//        textActor.GetTextProperty().BoldOn();
+//        textActor.GetTextProperty().SetFontFamilyToArial();
+//        textActor.GetTextProperty().ShadowOn();
+        textActor.GetTextProperty().SetJustificationToCentered();
+
+        vtkTextRepresentation textRepresentation =
+                new vtkTextRepresentation();
+
+        textRepresentation.GetPositionCoordinate().SetValue(0.3, 0.80);
+        textRepresentation.GetPosition2Coordinate().SetValue(0.4, 0.15);
+
+        titleWidget = new vtkTextWidget();
+        titleWidget.SetInteractor(view.getPanel().getRenderWindowInteractor());
+        titleWidget.SetRepresentation(textRepresentation);
+
+        titleWidget.SetTextActor(textActor);
+        titleWidget.SetSelectable(0);
+        titleWidget.SetEnabled(1);
     }
 
     private void addMenu() {
@@ -154,6 +179,7 @@ public class VTKOutputType extends TypeRepresentationBase {
     public void setViewValue(final Object o) {
 
         VSwingUtil.invokeAndWait(new Runnable() {
+           
 
             public void run() {
                 if (!(o instanceof Visualization)) {
@@ -161,19 +187,36 @@ public class VTKOutputType extends TypeRepresentationBase {
                 }
 
                 final Visualization v = (Visualization) o;
-                v.registerWithRenderer(view.getRenderer());
                 
-                scalarBar.SetLookupTable(v.getLookupTable());
+                view.getPanel().lock();
+                
+                v.registerWithRenderer(view.getRenderer());
+
+//                if (v.getLookupTable() != null) {
+//                    scalarBar.SetLookupTable(v.getLookupTable());
+//                    scalarBarWidget.SetEnabled(1);
+//
+//                    if (v.getValueTitle() != null) {
+//                        scalarBar.SetTitle(v.getValueTitle());
+//                    }
+//
+//                    if (v.getTitle() != null) {
+//                        addTitle(v.getTitle());
+//                    }
+//
+//                } else {
+//                    scalarBarWidget.SetEnabled(0);
+//                }
 
                 viewValue = v;
 
                 view.setBackground(v.getBackground());
                 view.contentChanged();
                 view.repaint();
+                
+                view.getPanel().unlock();
             }
         });
-
-
     }
 
     @Override
@@ -192,9 +235,15 @@ public class VTKOutputType extends TypeRepresentationBase {
             public void run() {
                 if (viewValue != null) {
                     viewValue.unregisterFromRenderer(view.getRenderer());
-                    view.contentChanged();
-                    view.repaint();
+//                    viewValue.dispose();
                 }
+
+//                scalarBarWidget.SetEnabled(0);
+//                titleWidget.SetEnabled(0);
+
+                view.contentChanged();
+                view.deleteContent();
+                view.repaint();
             }
         });
 
@@ -268,12 +317,15 @@ public class VTKOutputType extends TypeRepresentationBase {
         double[] pos = (double[]) super.getCustomData().get(POSITION_KEY);
         double[] focal = (double[]) super.getCustomData().get(FOCAL_POINT_KEY);
         Double roll = (Double) super.getCustomData().get(ROLL_KEY);
+
         if (pos != null) {
             view.getRenderer().GetActiveCamera().SetPosition(pos);
         }
+
         if (focal != null) {
             view.getRenderer().GetActiveCamera().SetFocalPoint(focal);
         }
+
         if (roll != null) {
             view.getRenderer().GetActiveCamera().SetRoll(roll);
         }

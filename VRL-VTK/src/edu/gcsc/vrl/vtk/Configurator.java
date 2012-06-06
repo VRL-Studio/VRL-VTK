@@ -8,15 +8,18 @@ import eu.mihosoft.vrl.io.IOUtil;
 import eu.mihosoft.vrl.system.*;
 import eu.mihosoft.vrl.visual.ActionDelelator;
 import eu.mihosoft.vrl.visual.VAction;
+import eu.mihosoft.vrl.visual.VSwingUtil;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vtk.vtkNativeLibrary;
+import vtk.vtkObject;
 
 /**
  *
@@ -53,6 +56,14 @@ public class Configurator extends VPluginConfigurator {
                 SphereInteractorPanel.main(new String[0]);
             }
         }, ActionDelelator.TOOL_MENU);
+
+        VSwingUtil.invokeLater(new Runnable() {
+
+            public void run() {
+                vtkObject.JAVA_OBJECT_MANAGER.getAutoGarbageCollector().SetAutoGarbageCollection(true);
+                vtkObject.JAVA_OBJECT_MANAGER.getAutoGarbageCollector().SetScheduleTime(1, TimeUnit.SECONDS);
+            }
+        });
     }
 
     @Override
