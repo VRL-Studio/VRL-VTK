@@ -39,6 +39,7 @@ public class VTKOutputType extends TypeRepresentationBase {
     private vtkScalarBarActor scalarBar;
     private vtkScalarBarWidget scalarBarWidget;
     private vtkTextWidget titleWidget;
+    private vtkOrientationMarkerWidget axesWidget;
 
     public VTKOutputType() {
 
@@ -84,13 +85,14 @@ public class VTKOutputType extends TypeRepresentationBase {
 
         this.setInputComponent(cont);
 
-//        addAxes();
-//        addScalarBar();
-//        addTitle("Plot");
+        addAxes();
+        addScalarBar();
+        addTitle("Plot");
         addMenu();
     }
 
     private void addAxes() {
+        
         vtkAxesActor axesActor = new vtkAxesActor();
         axesActor.AxisLabelsOn();
         axesActor.SetShaftTypeToCylinder();
@@ -99,13 +101,17 @@ public class VTKOutputType extends TypeRepresentationBase {
         axesActor.SetNormalizedTipLength(0.3, 0.3, 0.3);
         axesActor.SetConeResolution(32);
         axesActor.SetAxisLabels(0);
-        vtkOrientationMarkerWidget axesOrientation = new vtkOrientationMarkerWidget();
-        axesOrientation.SetOrientationMarker(axesActor);
-        axesOrientation.SetInteractor(view.getPanel().getRenderWindowInteractor());
-        axesOrientation.InteractiveOff();
-        axesOrientation.SetViewport(0, 0, 0.25, 0.25);
-        axesOrientation.SetOutlineColor(1.0, 1.0, 1.0);
-        axesOrientation.SetEnabled(1);
+        // we need global reference to widgets that are not explicitly
+        // added to renderer. otherwise the VTK GC will delete related memory
+        axesWidget = new vtkOrientationMarkerWidget();
+        axesWidget.SetOrientationMarker(axesActor);
+        view.getPanel().lock();
+        axesWidget.SetInteractor(view.getPanel().getRenderWindowInteractor());
+        axesWidget.InteractiveOff();
+        axesWidget.SetViewport(0, 0, 0.25, 0.25);
+        axesWidget.SetOutlineColor(1.0, 1.0, 1.0);
+        axesWidget.SetEnabled(1);
+        view.getPanel().unlock();
     }
 
     private void addScalarBar() {
@@ -192,21 +198,21 @@ public class VTKOutputType extends TypeRepresentationBase {
                 
                 v.registerWithRenderer(view.getRenderer());
 
-//                if (v.getLookupTable() != null) {
-//                    scalarBar.SetLookupTable(v.getLookupTable());
-//                    scalarBarWidget.SetEnabled(1);
-//
-//                    if (v.getValueTitle() != null) {
-//                        scalarBar.SetTitle(v.getValueTitle());
-//                    }
-//
-//                    if (v.getTitle() != null) {
-//                        addTitle(v.getTitle());
-//                    }
-//
-//                } else {
-//                    scalarBarWidget.SetEnabled(0);
-//                }
+                if (v.getLookupTable() != null) {
+                    scalarBar.SetLookupTable(v.getLookupTable());
+                    scalarBarWidget.SetEnabled(1);
+
+                    if (v.getValueTitle() != null) {
+                        scalarBar.SetTitle(v.getValueTitle());
+                    }
+
+                    if (v.getTitle() != null) {
+                        addTitle(v.getTitle());
+                    }
+
+                } else {
+                    scalarBarWidget.SetEnabled(0);
+                }
 
                 viewValue = v;
 
@@ -238,8 +244,8 @@ public class VTKOutputType extends TypeRepresentationBase {
 //                    viewValue.dispose();
                 }
 
-//                scalarBarWidget.SetEnabled(0);
-//                titleWidget.SetEnabled(0);
+                scalarBarWidget.SetEnabled(0);
+                titleWidget.SetEnabled(0);
 
                 view.contentChanged();
                 view.deleteContent();

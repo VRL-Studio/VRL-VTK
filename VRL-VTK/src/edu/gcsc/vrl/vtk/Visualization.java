@@ -140,6 +140,7 @@ public class Visualization {
         this.title = title;
     }
 
+// We currently use VTK GC
 //    void dispose() {
 //        for (vtkActor actor : actors) {
 //            actor.Delete();

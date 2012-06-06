@@ -57,11 +57,12 @@ public class Configurator extends VPluginConfigurator {
             }
         }, ActionDelelator.TOOL_MENU);
 
+        // We make use of VTK GC which will run at 
         VSwingUtil.invokeLater(new Runnable() {
 
             public void run() {
                 vtkObject.JAVA_OBJECT_MANAGER.getAutoGarbageCollector().SetAutoGarbageCollection(true);
-                vtkObject.JAVA_OBJECT_MANAGER.getAutoGarbageCollector().SetScheduleTime(1, TimeUnit.SECONDS);
+                vtkObject.JAVA_OBJECT_MANAGER.getAutoGarbageCollector().SetScheduleTime(1, TimeUnit.MINUTES);
             }
         });
     }
