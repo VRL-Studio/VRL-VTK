@@ -109,26 +109,34 @@ public class Configurator extends VPluginConfigurator {
         });
 
         //
-
         String path = getNativeLibFolder().getAbsolutePath();
 
         try {
-            VSysUtil.addNativeLibraryPath(path);
-        } catch (IOException ex) {
-            Logger.getLogger(Configurator.class.getName()).log(Level.SEVERE, null, ex);
+            
+            System.loadLibrary("jawt");
+            SysUtil.loadLibraries(path);
+
+        } catch (Throwable tr) {
+            Logger.getLogger(Configurator.class.getName()).log(Level.SEVERE, null, tr);
         }
 
-        if (!vtkNativeLibrary.LoadAllNativeLibraries()) {
-            for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
-                if (!lib.IsLoaded()) {
-                    System.out.println(lib.GetLibraryName() + " not loaded");
-                }
-            }
-
-            System.out.println("Make sure the search path is correct: ");
-            System.out.println(System.getProperty("java.library.path"));
-        }
-
-        vtkNativeLibrary.DisableOutputWindow(null);
+//        try {
+//            VSysUtil.addNativeLibraryPath(path);
+//        } catch (IOException ex) {
+//            Logger.getLogger(Configurator.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//
+//        if (!vtkNativeLibrary.LoadAllNativeLibraries()) {
+//            for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
+//                if (!lib.IsLoaded()) {
+//                    System.out.println(lib.GetLibraryName() + " not loaded");
+//                }
+//            }
+//
+//            System.out.println("Make sure the search path is correct: ");
+//            System.out.println(System.getProperty("java.library.path"));
+//        }
+//
+//        vtkNativeLibrary.DisableOutputWindow(null);
     }
 }
