@@ -27,6 +27,7 @@
  */
 package edu.gcsc.vrl.vtk;
 
+import eu.mihosoft.vrl.lang.VLangUtils;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -62,7 +63,7 @@ public class SysUtil {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        loadNativeLibrariesInFolder(new File(path), true);
+        loadNativeLibrariesInFolder(new File(path), false);
 
         if (!vtk.vtkNativeLibrary.LoadAllNativeLibraries()) {
             for (vtk.vtkNativeLibrary lib : vtk.vtkNativeLibrary.values()) {
@@ -137,20 +138,21 @@ public class SysUtil {
         Collection<File> dynamicLibraries = new ArrayList<File>();
 
         if (recursive) {
-            dynamicLibraries.addAll(
-                    listFiles(folder, new String[]{dylibEnding}));
+            throw new UnsupportedOperationException("recursive loading currently not supported!");
         } else {
             File[] libFiles = folder.listFiles(new FilenameFilter() {
 
                 @Override
                 public boolean accept(File dir, String name) {
-                    return name.endsWith(dylibEnding);
+                    return name.endsWith("."+dylibEnding)
+                            || name.contains("."+dylibEnding+".");
                 }
             });
             dynamicLibraries.addAll(Arrays.asList(libFiles));
         }
 
-        System.out.println(">> loading native libraries:");
+        System.out.println(">> loading native libraries from path: "
+                + folder.getAbsolutePath());
 
         ArrayList<String> loadedLibraries = new ArrayList<String>();
         ArrayList<String> errorLibraries = new ArrayList<String>();
