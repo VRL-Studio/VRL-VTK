@@ -92,7 +92,7 @@ public class VTKOutputType extends TypeRepresentationBase {
     }
 
     private void addAxes() {
-        
+
         vtkAxesActor axesActor = new vtkAxesActor();
         axesActor.AxisLabelsOn();
         axesActor.SetShaftTypeToCylinder();
@@ -102,7 +102,8 @@ public class VTKOutputType extends TypeRepresentationBase {
         axesActor.SetConeResolution(32);
         axesActor.SetAxisLabels(0);
         // we need global reference to widgets that are not explicitly
-        // added to renderer. otherwise the VTK GC will delete related memory
+        // added to renderer. otherwise the VTK GC will delete related memory.
+        // This is a VTK bug.
         axesWidget = new vtkOrientationMarkerWidget();
         axesWidget.SetOrientationMarker(axesActor);
         view.getPanel().lock();
@@ -126,6 +127,10 @@ public class VTKOutputType extends TypeRepresentationBase {
         hueLut.Build();
 
         scalarBar.SetLookupTable(hueLut);
+
+        // we need global reference to widgets that are not explicitly
+        // added to renderer. otherwise the VTK GC will delete related memory.
+        // This is a VTK bug.
         scalarBarWidget = new vtkScalarBarWidget();
 
         scalarBarWidget.SetInteractor(view.getPanel().getRenderWindowInteractor());
@@ -138,9 +143,6 @@ public class VTKOutputType extends TypeRepresentationBase {
         textActor.SetInput(title);
 
         textActor.GetTextProperty().SetColor(1, 1, 1);
-//        textActor.GetTextProperty().BoldOn();
-//        textActor.GetTextProperty().SetFontFamilyToArial();
-//        textActor.GetTextProperty().ShadowOn();
         textActor.GetTextProperty().SetJustificationToCentered();
 
         vtkTextRepresentation textRepresentation =
@@ -149,6 +151,9 @@ public class VTKOutputType extends TypeRepresentationBase {
         textRepresentation.GetPositionCoordinate().SetValue(0.3, 0.80);
         textRepresentation.GetPosition2Coordinate().SetValue(0.4, 0.15);
 
+        // we need global reference to widgets that are not explicitly
+        // added to renderer. otherwise the VTK GC will delete related memory.
+        // This is a VTK bug.
         titleWidget = new vtkTextWidget();
         titleWidget.SetInteractor(view.getPanel().getRenderWindowInteractor());
         titleWidget.SetRepresentation(textRepresentation);
@@ -185,19 +190,23 @@ public class VTKOutputType extends TypeRepresentationBase {
     public void setViewValue(final Object o) {
 
         VSwingUtil.invokeAndWait(new Runnable() {
-           
 
             public void run() {
+
+                // check if type is correct
                 if (!(o instanceof Visualization)) {
                     return;
                 }
 
                 final Visualization v = (Visualization) o;
-                
+
+                // lock panel (may crash otherwise)
                 view.getPanel().lock();
-                
+
+                // ad actors and volumes
                 v.registerWithRenderer(view.getRenderer());
 
+                // check whether scalarbar shall be shown
                 if (v.getLookupTable() != null) {
                     scalarBar.SetLookupTable(v.getLookupTable());
                     scalarBarWidget.SetEnabled(1);
@@ -206,12 +215,20 @@ public class VTKOutputType extends TypeRepresentationBase {
                         scalarBar.SetTitle(v.getValueTitle());
                     }
 
-                    if (v.getTitle() != null) {
-                        addTitle(v.getTitle());
-                    }
-
                 } else {
                     scalarBarWidget.SetEnabled(0);
+                }
+
+                // show title if avalable
+                if (v.getTitle() != null) {
+                    addTitle(v.getTitle());
+                }
+                
+                // enable orientation widget if requested
+                if (v.isOrientationVisible()) {
+                    axesWidget.SetEnabled(1);
+                } else {
+                    axesWidget.SetEnabled(0);
                 }
 
                 viewValue = v;
@@ -219,7 +236,7 @@ public class VTKOutputType extends TypeRepresentationBase {
                 view.setBackground(v.getBackground());
                 view.contentChanged();
                 view.repaint();
-                
+
                 view.getPanel().unlock();
             }
         });
@@ -257,7 +274,7 @@ public class VTKOutputType extends TypeRepresentationBase {
     }
 
     /**
-     * Defines the Vcanvas3D size by evaluating a groovy script.
+     * Defines the VTKCanvas3D size by evaluating a groovy script.
      *
      * @param script the script to evaluate
      */

@@ -18,11 +18,13 @@ import vtk.*;
 public class Visualization {
 
     private transient Collection<vtkActor> actors = new ArrayList<vtkActor>();
+    private transient Collection<vtkVolume> volumes = new ArrayList<vtkVolume>();
     private transient Collection<vtkActor2D> actors2D = new ArrayList<vtkActor2D>();
     private transient Color background = new Color(120, 120, 120);
     private transient vtkLookupTable lookupTable;
     private transient String valueTitle;
     private transient String title;
+    private boolean orientationVisible;
 
     public Visualization(vtkActor... actors) {
         this.actors.addAll(Arrays.asList(actors));
@@ -43,6 +45,14 @@ public class Visualization {
     public void addActors2D(vtkActor2D... a) {
         actors2D.addAll(Arrays.asList(a));
     }
+    
+    public void addVolume(vtkVolume v) {
+        volumes.add(v);
+    }
+    
+    public void addVolumes(vtkVolume... v) {
+        volumes.addAll(Arrays.asList(v));
+    }
 
     public boolean removeActor(vtkActor a) {
         return actors.remove(a);
@@ -50,6 +60,10 @@ public class Visualization {
 
     public boolean removeActor2D(vtkActor2D a) {
         return actors2D.remove(a);
+    }
+    
+    public boolean removeVolume(vtkVolume v) {
+        return volumes.remove(v);
     }
 
     /**
@@ -68,6 +82,7 @@ public class Visualization {
 
     void registerWithRenderer(final vtkRenderer renderer) {
 
+        // ensure we execute this on EDT (ui thread)
         VSwingUtil.invokeLater(new Runnable() {
 
             public void run() {
@@ -78,12 +93,17 @@ public class Visualization {
                 for (vtkActor2D actor : actors2D) {
                     renderer.AddActor2D(actor);
                 }
+                
+                for (vtkVolume volume : volumes) {
+                    renderer.AddVolume(volume);
+                }
             }
         });
     }
 
     void unregisterFromRenderer(final vtkRenderer renderer) {
 
+        // ensure we execute this on EDT (ui thread)
         VSwingUtil.invokeLater(new Runnable() {
 
             public void run() {
@@ -93,6 +113,10 @@ public class Visualization {
 
                 for (vtkActor2D actor : actors2D) {
                     renderer.RemoveActor2D(actor);
+                }
+                
+                for (vtkVolume volume : volumes) {
+                    renderer.RemoveVolume(volume);
                 }
             }
         });
@@ -152,4 +176,18 @@ public class Visualization {
 //
 //        lookupTable.Delete();
 //    }
+
+    /**
+     * @return the orientationVisible
+     */
+    public boolean isOrientationVisible() {
+        return orientationVisible;
+    }
+
+    /**
+     * @param orientationVisible the orientationVisible to set
+     */
+    public void setOrientationVisible(boolean orientationVisible) {
+        this.orientationVisible = orientationVisible;
+    }
 }
