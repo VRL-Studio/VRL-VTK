@@ -27,6 +27,7 @@
  */
 package edu.gcsc.vrl.vtk;
 
+import eu.mihosoft.vrl.io.IOUtil;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -129,8 +130,15 @@ public class SysUtil {
      * <code>false</code> otherwise
      */
     public static boolean loadNativeLibrariesInFolder(File folder, boolean recursive) {
-//        VParamUtil.throwIfNotValid(
-//                VParamUtil.VALIDATOR_EXISTING_FOLDER, folder);
+
+        //        VParamUtil.throwIfNotValid(
+        //                VParamUtil.VALIDATOR_EXISTING_FOLDER, folder);
+
+        try {
+            addNativeLibraryPath(folder.getAbsolutePath());
+        } catch (IOException ex) {
+            Logger.getLogger(SysUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         final String dylibEnding = getPlatformSpecificLibraryEnding();
 
@@ -312,4 +320,5 @@ public class SysUtil {
     public static boolean isLinux() {
         return getOS().equals(OS_LINUX);
     }
+
 }
