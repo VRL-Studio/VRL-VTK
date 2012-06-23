@@ -5,6 +5,10 @@
 package edu.gcsc.vrl.vtk;
 
 import eu.mihosoft.vrl.annotation.TypeInfo;
+import eu.mihosoft.vrl.dialogs.FileDialogManager;
+import eu.mihosoft.vrl.io.FileSaver;
+import eu.mihosoft.vrl.io.ImageFilter;
+import eu.mihosoft.vrl.io.ImageSaver;
 import eu.mihosoft.vrl.reflection.CustomParamData;
 import eu.mihosoft.vrl.reflection.TypeRepresentationBase;
 import eu.mihosoft.vrl.visual.ResizableContainer;
@@ -16,8 +20,11 @@ import groovy.lang.Script;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
 import javax.media.j3d.Transform3D;
 import javax.swing.JMenuItem;
+import javax.swing.filechooser.FileFilter;
 import vtk.*;
 
 /**
@@ -163,6 +170,57 @@ public class VTKOutputType extends TypeRepresentationBase {
         titleWidget.SetEnabled(1);
     }
 
+    private void saveImage() {
+        FileDialogManager dialogManager = new FileDialogManager();
+
+        class DummySaver implements FileSaver {
+
+            File imgFile;
+
+            public void saveFile(Object o, File file, String ext) throws IOException {
+                this.imgFile = file;
+            }
+
+            public String getDefaultExtension() {
+                return "png";
+            }
+        }
+
+        class PNGFilter extends FileFilter {
+
+            @Override
+            public boolean accept(File f) {
+                return f.getName().toLowerCase().endsWith(".png")
+                        || f.isDirectory();
+            }
+
+            @Override
+            public String getDescription() {
+                return "Image Files (png)";
+            }
+        }
+
+        DummySaver imgSaver = new DummySaver();
+        dialogManager.saveFile(this, new Object(), imgSaver, new PNGFilter());
+
+        if (imgSaver.imgFile != null) {
+            view.getPanel().lock();
+
+            vtkWindowToImageFilter w2if = new vtkWindowToImageFilter();
+            w2if.SetInput(view.getPanel().GetRenderWindow());
+
+            w2if.SetMagnification(3); // should we specify this in save dialog?
+            w2if.Update();
+
+            vtkPNGWriter writer = new vtkPNGWriter();
+            writer.SetInput(w2if.GetOutput());
+            writer.SetFileName(imgSaver.imgFile.getAbsolutePath());
+            writer.Write();
+
+            view.getPanel().unlock();
+        }
+    }
+
     private void addMenu() {
         JMenuItem resetItem = new JMenuItem("Reset View");
         resetItem.addActionListener(new ActionListener() {
@@ -173,6 +231,16 @@ public class VTKOutputType extends TypeRepresentationBase {
         });
 
         view.getMenu().add(resetItem);
+
+        JMenuItem imgItem = new JMenuItem("Save Image");
+        imgItem.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                saveImage();
+            }
+        });
+
+        view.getMenu().add(imgItem);
 
         view.addMouseListener(new MouseAdapter() {
 
@@ -203,7 +271,7 @@ public class VTKOutputType extends TypeRepresentationBase {
                 // lock panel (may crash otherwise)
                 view.getPanel().lock();
 
-                // ad actors and volumes
+                // add actors and volumes
                 v.registerWithRenderer(view.getRenderer());
 
                 // check whether scalarbar shall be shown
@@ -223,7 +291,7 @@ public class VTKOutputType extends TypeRepresentationBase {
                 if (v.getTitle() != null) {
                     addTitle(v.getTitle());
                 }
-                
+
                 // enable orientation widget if requested
                 if (v.isOrientationVisible()) {
                     axesWidget.SetEnabled(1);
@@ -310,7 +378,7 @@ public class VTKOutputType extends TypeRepresentationBase {
             view.setSize(new Dimension(w - 10, h));
         }
 
-        System.out.println(getValueOptions());
+        // System.out.println(getValueOptions());
     }
 
     @Override
