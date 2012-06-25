@@ -101,13 +101,15 @@ public class VTKOutputType extends TypeRepresentationBase {
     private void addAxes() {
 
         vtkAxesActor axesActor = new vtkAxesActor();
-        axesActor.AxisLabelsOn();
         axesActor.SetShaftTypeToCylinder();
         axesActor.SetCylinderRadius(0.05);
         axesActor.SetConeRadius(0.5);
         axesActor.SetNormalizedTipLength(0.3, 0.3, 0.3);
         axesActor.SetConeResolution(32);
-        axesActor.SetAxisLabels(0);
+        axesActor.SetAxisLabels(1);
+        axesActor.SetXAxisLabelText("X");
+        axesActor.SetYAxisLabelText("Y");
+        axesActor.SetZAxisLabelText("Z");
         // we need global reference to widgets that are not explicitly
         // added to renderer. otherwise the VTK GC will delete related memory.
         // This is a VTK bug.
