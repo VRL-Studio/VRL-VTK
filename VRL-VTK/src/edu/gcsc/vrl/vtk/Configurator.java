@@ -30,7 +30,7 @@ public class Configurator extends VPluginConfigurator {
     private File templateProjectSrc;
 
     public Configurator() {
-        setIdentifier(new PluginIdentifier("VRL-VTK", "0.3"));
+        setIdentifier(new PluginIdentifier("VRL-VTK", "1.0"));
         setDescription("VTK Integration Plugin");
         exportPackage("edu.gcsc.vrl.vtk");
         exportPackage("vtk");
