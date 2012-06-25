@@ -24,7 +24,7 @@ public class Visualization {
     private transient vtkLookupTable lookupTable;
     private transient String valueTitle;
     private transient String title;
-    private boolean orientationVisible;
+    private boolean orientationVisible = true;
 
     public Visualization(vtkActor... actors) {
         this.actors.addAll(Arrays.asList(actors));
