@@ -27,7 +27,6 @@ import javax.swing.JPopupMenu;
  */
 public class VTKCanvas3D extends VTKJPanel implements ComponentListener {
 
-    private static final long serialVersionUID = -1672983251248240258L;
     /**
      * the type representation this component belongs to
      */
