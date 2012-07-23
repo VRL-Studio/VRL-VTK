@@ -243,6 +243,24 @@ public class VTKOutputType extends TypeRepresentationBase {
         });
 
         view.getMenu().add(imgItem);
+        
+        final String perspToOrtho = "Toggle Projection (Persp. -> Ortho)";
+        final String orthoToPersp = "Toggle Projection (Ortho. -> Persp.)";
+        
+        final JMenuItem toggleProjectionItem = new JMenuItem(perspToOrtho);
+        toggleProjectionItem.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                view.setParallelProjection(!view.isParallelProjection());
+                if (view.isParallelProjection()) {
+                    toggleProjectionItem.setText(orthoToPersp);
+                } else {
+                    toggleProjectionItem.setText(perspToOrtho);
+                }
+            }
+        });
+
+        view.getMenu().add(toggleProjectionItem);
 
         view.addMouseListener(new MouseAdapter() {
 

@@ -45,6 +45,7 @@ public class Configurator extends VPluginConfigurator {
         VPluginAPI vapi = (VPluginAPI) api;
 
         vapi.addComponent(GridPainter3D.class);
+        vapi.addComponent(VTKViewer.class);
         vapi.addComponent(VTKSampleComponent.class);
 
         vapi.addTypeRepresentation(VTKOutputType.class);

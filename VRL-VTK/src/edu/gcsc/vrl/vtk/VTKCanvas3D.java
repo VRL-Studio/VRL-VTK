@@ -495,8 +495,6 @@ public class VTKCanvas3D extends VTKJPanel implements ComponentListener {
 //        postRenderTask();
         typeRepresentation.setValueOptions("width=" + getWidth() + ";"
                 + "height=" + getHeight());
-
-        System.out.println("SIZE: " + getSize());
     }
 
     @Override
