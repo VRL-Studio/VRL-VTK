@@ -4,17 +4,22 @@
 package edu.gcsc.vrl.vtk;
 
 import eu.mihosoft.vrl.annotation.ComponentInfo;
+import eu.mihosoft.vrl.annotation.ParamInfo;
+import java.io.File;
 import java.io.Serializable;
 import java.util.Arrays;
 import vtk.vtkActor;
 import vtk.vtkArrowSource;
 import vtk.vtkCubeSource;
+import vtk.vtkGlyph2D;
 import vtk.vtkGlyph3D;
 import vtk.vtkImageData;
 import vtk.vtkImageMagnitude;
 import vtk.vtkPolyData;
 import vtk.vtkPolyDataMapper;
 import vtk.vtkThresholdPoints;
+import vtk.vtkUnstructuredGrid;
+import vtk.vtkXMLUnstructuredGridReader;
 
 /**
  *
@@ -25,27 +30,41 @@ public class VectorFieldExample implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public Visualization VectorFieldNonZeroExtraction() {
-        // Create an image
-        vtkImageData image = new vtkImageData();
+    public Visualization VectorFieldNonZeroExtraction(
+            @ParamInfo(style="load-dialog")
+                    File file,
+            int elementInFile,
+            @ParamInfo(name="threshold",options="value=0.00001")
+            double threshold) {
         
-        CreateVectorField(image);
+//        // Create an image
+//        vtkImageData image = new vtkImageData();
+//        
+//        CreateVectorField(image);
+        
+        vtkXMLUnstructuredGridReader reader = new vtkXMLUnstructuredGridReader();
 
-        // This filter produces a vtkImageData with an array named "Magnitude"
-        vtkImageMagnitude magnitudeFilter = new vtkImageMagnitude();
-        magnitudeFilter.SetInputConnection(image.GetProducerPort());
-        magnitudeFilter.Update();
+//            System.out.println("-- reader = "+ reader);
+            reader.SetFileName(file.getAbsolutePath());
+            reader.Update();
+            vtkUnstructuredGrid image = reader.GetOutput();
+            
 
-        image.GetPointData().AddArray(magnitudeFilter.GetOutput().GetPointData().GetScalars());
-        image.GetPointData().SetActiveScalars("Magnitude");
+//        // This filter produces a vtkImageData with an array named "Magnitude"
+//        vtkImageMagnitude magnitudeFilter = new vtkImageMagnitude();
+//        magnitudeFilter.SetInputConnection(image.GetProducerPort());
+//        magnitudeFilter.Update();
+//
+//        image.GetPointData().AddArray(magnitudeFilter.GetOutput().GetPointData().GetScalars());
+//        image.GetPointData().SetActiveScalars("Magnitude");
 
         vtkThresholdPoints thresholdVector = new vtkThresholdPoints();
         thresholdVector.SetInput(image);
         thresholdVector.SetInputArrayToProcess(
-                0,
+                elementInFile,
                 image.GetInformation());
 
-        thresholdVector.ThresholdByUpper(0.00001);
+        thresholdVector.ThresholdByUpper(threshold);
         thresholdVector.Update();
 
         // in case you want to save imageData
@@ -56,13 +75,13 @@ public class VectorFieldExample implements Serializable {
 
         // repesents the pixels
         vtkCubeSource cubeSource = new vtkCubeSource();
-        cubeSource.SetXLength(2.0);
-        cubeSource.SetYLength(2.0);
-        cubeSource.SetZLength(2.0);
+        cubeSource.SetXLength(0.01);
+        cubeSource.SetYLength(0.01);
+        cubeSource.SetZLength(0.01);
         
         vtkGlyph3D glyph = new vtkGlyph3D();
         glyph.SetInput(image);
-//        glyph.SetSourceConnection(cubeSource.GetOutputPort()); //show cubes
+        glyph.SetSourceConnection(cubeSource.GetOutputPort()); //show cubes
         // don't scale glyphs according to any scalar data
         glyph.SetScaleModeToDataScalingOff();
 
@@ -87,11 +106,27 @@ public class VectorFieldExample implements Serializable {
 
         vtkPolyData tmp = thresholdVector.GetOutput();
         System.out.println("number of thresholded points: " + tmp.GetNumberOfPoints());
-        vectorGlyph.SetInputConnection(thresholdVector.GetOutputPort());
+//        vectorGlyph.SetInputConnection(thresholdVector.GetOutputPort());
+//        vectorGlyph.SetInputConnection(thresholdVector.GetOutputPort());
+        
+//        vtkGlyph2D vectorfieldVector = new vtkGlyph2D();
+//        
+//        vectorfieldVector.SetInput(image);
+//        vectorfieldVector.SetInputArrayToProcess(
+//                elementInFile,
+//                image.GetInformation());
+//
+//        
+//        vectorfieldVector.Update();
+        
+        vectorGlyph.SetInputConnection(image.GetProducerPort());
+
 
         // in case you want the point glyphs to be oriented according to 
         // scalar values in array "ImageScalars" uncomment the following line
-        image.GetPointData().SetActiveVectors("ImageScalars");
+//        image.GetPointData().SetActiveVectors("ImageScalars");
+        
+//        image.GetPointData().SetActiveVectors(image.GetPointData().GetArrayName(elementInFile));
 
         vectorGlyph.SetSourceConnection(arrowSource.GetOutputPort());
         vectorGlyph.SetScaleModeToScaleByVector();
