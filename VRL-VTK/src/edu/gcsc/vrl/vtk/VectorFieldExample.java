@@ -29,7 +29,8 @@ public class VectorFieldExample implements Serializable {
     public Visualization VectorFieldNonZeroExtraction(
             @ParamInfo(style = "load-dialog") File file,
             int elementInFile,
-            @ParamInfo(name = "threshold", options = "value=0.00001") double threshold) {
+            @ParamInfo(name = "threshold", options = "value=0.00001") double threshold,
+            @ParamInfo(name = "scaleFactor", options = "value=0.05") double scaleFactor) {
 
         Visualization vis = new Visualization();
 
@@ -45,6 +46,7 @@ public class VectorFieldExample implements Serializable {
         reader.SetFileName(file.getAbsolutePath());
         reader.Update();
         vtkUnstructuredGrid image = reader.GetOutput();
+        image.GetPointData().SetVectors(image.GetPointData().GetArray(elementInFile));
 
 
 //        // This filter produces a vtkImageData with an array named "Magnitude"
@@ -71,31 +73,32 @@ public class VectorFieldExample implements Serializable {
         //writer.Write();
 
         // repesents the pixels
-        vtkCubeSource cubeSource = new vtkCubeSource();
-        cubeSource.SetXLength(0.01);
-        cubeSource.SetYLength(0.01);
-        cubeSource.SetZLength(0.01);
+//        vtkCubeSource cubeSource = new vtkCubeSource();
+//        cubeSource.SetXLength(0.01);
+//        cubeSource.SetYLength(0.01);
+//        cubeSource.SetZLength(0.01);
 
-        vtkGlyph3D glyph = new vtkGlyph3D();
-        glyph.SetInput(image);
-        glyph.SetSourceConnection(cubeSource.GetOutputPort()); //show cubes
-        // don't scale glyphs according to any scalar data
-//        glyph.SetScaleModeToDataScalingOff();
+//        vtkGlyph3D glyph = new vtkGlyph3D();
+//        glyph.SetInput(image);
+////        glyph.SetSourceConnection(cubeSource.GetOutputPort()); //show cubes
+//        // don't scale glyphs according to any scalar data
+////        glyph.SetScaleModeToDataScalingOff();
+//        glyph.SetSource(ar.GetPort());
+//
+//        vtkPolyDataMapper glyphMapper = new vtkPolyDataMapper();
+//        glyphMapper.SetInputConnection(glyph.GetOutputPort());
+//        // don't color glyphs according to scalar data
+////        glyphMapper.ScalarVisibilityOff();
+////        glyphMapper.SetScalarModeToDefault();
+//        glyphMapper.SetScalarModeToUsePointData();
+//
+//        vtkActor actor = new vtkActor();
+//        actor.SetMapper(glyphMapper);
+//
+//        vis.addActor(actor);
 
-        vtkPolyDataMapper glyphMapper = new vtkPolyDataMapper();
-        glyphMapper.SetInputConnection(glyph.GetOutputPort());
-        // don't color glyphs according to scalar data
-//        glyphMapper.ScalarVisibilityOff();
-//        glyphMapper.SetScalarModeToDefault();
-        glyphMapper.SetScalarModeToUsePointData();
 
-        vtkActor actor = new vtkActor();
-        actor.SetMapper(glyphMapper);
-        
-         vis.addActor(actor);
-        
-        
-        
+
 
         // represent vector field
         vtkGlyph3D vectorGlyph = new vtkGlyph3D();
@@ -140,7 +143,7 @@ public class VectorFieldExample implements Serializable {
                 elementInFile,
                 image.GetInformation());
 
-        vectorGlyph.SetScaleFactor(0.025);
+        vectorGlyph.SetScaleFactor(scaleFactor);
 
         vectorGlyph.Update();
 
@@ -155,6 +158,4 @@ public class VectorFieldExample implements Serializable {
 
         return vis;
     }
-
-   
 }
