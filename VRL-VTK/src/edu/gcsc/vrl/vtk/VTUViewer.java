@@ -414,7 +414,9 @@ public class VTUViewer implements java.io.Serializable {
                     double warpFactor,
             @ParamGroupInfo(group = "Filters")
             @ParamInfo(name = "Num Contour", style = "default", options = "value=5") 
-                    int numContours) {
+                    int numContours,
+            @ParamGroupInfo(group = "Filters")
+            @ParamInfo(name = "scale factor", style = "default", options = "value=0.05") double scaleFactor) {
 
         mRep = mReq.getMethod();
 
@@ -443,10 +445,8 @@ public class VTUViewer implements java.io.Serializable {
             // create vis object to add all components
             final Visualization visualization = new Visualization();
 
-
             final String fileName = file.getAbsolutePath();//getAbsoluteFile();
 //            System.out.println("-- fileName = "+ fileName);
-
 
             if (title.isEmpty()) {
 
@@ -454,8 +454,6 @@ public class VTUViewer implements java.io.Serializable {
             } else {
                 visualization.setTitle(title);
             }
-
-
 
             vtkXMLUnstructuredGridReader reader = new vtkXMLUnstructuredGridReader();
 
@@ -468,31 +466,37 @@ public class VTUViewer implements java.io.Serializable {
             // get point Data for component
             ////////////////////////////////////
             int numVisCompData = ug.GetPointData().GetNumberOfArrays();
-            
-//            if (numVisCompData != 1) {
-//                return visualization;
-//            }
-//            throw new RuntimeException("Too many/few components: "+numVisCompData);
-            
+
+            System.out.println("ELEMENTS/ARRAYS IN FILE:");
+            for (int i = 0; i < numVisCompData; i++) {
+                System.out.println(i + ") " + ug.GetPointData().GetArrayName(i));
+            }
+
+            System.out.println("Components IN FILE:");
+            for (int i = 0; i < ug.GetPointData().GetNumberOfComponents(); i++) {
+                System.out.println("(" + i + ",0) " + ug.GetPointData().GetComponent(i, 0));
+            }
+
+            System.out.println("Tuples IN FILE: " + ug.GetPointData().GetNumberOfTuples());
+
             if (numVisCompData < elementInFile) {
-                String msg = "There are only "+ numVisCompData +" elements in the selected file."
-                        + " And you want to select: "+ elementInFile;
-                
+                String msg = "There are only " + numVisCompData + " elements in the selected file."
+                        + " And you want to select: " + elementInFile;
+
                 VMessage.error("Wrong Parameter", msg);
-                
+
                 System.err.println(msg);
-                
+
                 VMessage.info("Hint", "Notice that if you want to get the first element"
                         + "in file you need to tip 0 (zero).");
-                
+
                 return visualization;
             }
-            
+
             String visCompDataName = ug.GetPointData().GetArrayName(elementInFile);
-            
-            VMessage.info("visCompDataName is "+elementInFile+ "elementInFile", visCompDataName);
-            
             ug.GetPointData().SetScalars(ug.GetPointData().GetArray(visCompDataName));
+            
+//            VMessage.info("visCompDataName is " + elementInFile + " elementInFile", visCompDataName);
 
             ////////////////////////////////////
             // create value lookup table
@@ -592,88 +596,46 @@ public class VTUViewer implements java.io.Serializable {
             ////////////////////////////////////
             // create vector field
             ////////////////////////////////////
-            if (sDataStyle == "Vectorfield") {
-                
-                vtkArrowSource arrow = new vtkArrowSource();
-                arrow.SetTipResolution(6);
-                arrow.SetTipRadius(0.1);
-                arrow.SetTipLength(0.35);
-                arrow.SetShaftResolution(6);
-                arrow.SetShaftRadius( 0.03);
+            if (sDisplayStyle.equals("Vectorfield")) {
 
-//                vtkGlyph3D glyph = new vtkGlyph3D();
-                vtkGlyph2D glyph = new vtkGlyph2D();
-                glyph.SetInput(ug);//reader.GetOutput(elementInFile));//reader.GetOutputPort());
-                glyph.SetSource(arrow.GetOutput());//arrow.GetOutputPort());
-                glyph.SetVectorModeToUseVector();
-                glyph.SetColorModeToColorByScalar();
-                glyph.SetScaleModeToDataScalingOff();
-                glyph.OrientOn();
-                glyph.SetScaleFactor(0.2);
+                reader.SetFileName(file.getAbsolutePath());
+                reader.Update();
+                vtkUnstructuredGrid image = reader.GetOutput();
+                image.GetPointData().SetVectors(image.GetPointData().GetArray(elementInFile));
 
-                vtkPolyDataMapper glyphMapper = new vtkPolyDataMapper();
-                glyphMapper.SetInput(glyph.GetOutput());
-                glyphMapper.SetLookupTable(hueLut);
-                glyphMapper.ScalarVisibilityOn();
-                //   eval
-                glyphMapper.SetScalarRange(reader.GetOutput().GetScalarRange());
+                // represent vector field
+                vtkGlyph3D vectorGlyph = new vtkGlyph3D();
+                vtkArrowSource arrowSource = new vtkArrowSource();
+                vtkPolyDataMapper vectorGlyphMapper = new vtkPolyDataMapper();
 
-                vtkActor glyphActor = new vtkActor();
-                glyphActor.SetMapper( glyphMapper);//contourMapper);
+                int n = image.GetPointData().GetNumberOfArrays();
+                for (int i = 0; i < n; i++) {
+                    System.out.println("name of array[" + i + "]: " + image.GetPointData().GetArrayName(i));
+                }
 
-                visualization.addActor(glyphActor);
-                
-////                // Setup the arrows
-////                vtkArrowSource arrowSource = new vtkArrowSource();
-////                arrowSource.SetInputConnection(elementInFile, ug.GetProducerPort());
-////                arrowSource.Update();
-////
-////                vtkGlyph2D glyph = new vtkGlyph2D();
-////                glyph.SetInput(elementInFile,ug);
-////                glyph.SetSourceConnection(arrowSource.GetOutputPort());
-////                glyph.SetVectorModeToUseNormal();
-////                glyph.SetScaleModeToScaleByVector();
-////                glyph.SetScaleFactor(0.25);
-////                
-////
-////                vtkPolyDataMapper spikeMapper = new vtkPolyDataMapper();
-////                spikeMapper.SetInputConnection(glyph.GetOutputPort());
-////                spikeMapper.SetLookupTable(hueLut);
-////                
-////                vtkActor spikeActor = new vtkActor();
-////                spikeActor.SetMapper(spikeMapper);
-////
-////                
-////                setDisplayStyle(spikeActor, sDisplayStyle);
-////
-////                visualization.addActor(spikeActor);
-                
-//                vtkGlyph3D glyph = new vtkGlyph3D();
-//                glyph.SetInputConnection(sphere.GetOutputPort());
-//                glyph.SetSourceConnection(cone.GetOutputPort());
-//                glyph.SetVectorModeToUseNormal();
-//                glyph.SetScaleModeToScaleByVector();
-//                glyph.SetScaleFactor(0.25);
-//
-//                vtkPolyDataMapper spikeMapper = new vtkPolyDataMapper();
-//                spikeMapper.SetInputConnection(glyph.GetOutputPort());
-//                
-//                vtkActor spikeActor = new vtkActor();
-//                spikeActor.SetMapper(spikeMapper);
-//
-//                visualization.addActor(spikeActor);
+                vectorGlyph.SetInputConnection(image.GetProducerPort());
 
-//  vtkSmartPointer<vtkArrowSource> arrowSource = new vtkSmartPointer(vtkArrowSource);
-//  arrowSource.Update();
-// 
-//  vtkSmartPointer<vtkGlyph2D> glyphFilter = new vtkSmartPointer<vtkGlyph2D>();
-//  glyphFilter.SetSourceConnection(arrowSource.GetOutputPort());
-//  glyphFilter.OrientOn();
-//  glyphFilter.SetVectorModeToUseVector();
-//
-//  glyphFilter.SetInputData(image);
-//
-//  glyphFilter.Update();
+                vectorGlyph.SetSourceConnection(arrowSource.GetOutputPort());
+                vectorGlyph.SetScaleModeToScaleByVector();
+                vectorGlyph.SetVectorModeToUseVector();
+                vectorGlyph.ScalingOn();
+                vectorGlyph.OrientOn();
+                vectorGlyph.SetInputArrayToProcess(
+                        elementInFile,
+                        image.GetInformation());
+
+                vectorGlyph.SetScaleFactor(scaleFactor);
+
+                vectorGlyph.Update();
+
+                vectorGlyphMapper.SetInputConnection(vectorGlyph.GetOutputPort());
+                vectorGlyphMapper.Update();
+
+                vtkActor vectorActor = new vtkActor();
+                vectorActor.SetMapper(vectorGlyphMapper);
+
+
+                visualization.addActor(vectorActor);
             }
 
 

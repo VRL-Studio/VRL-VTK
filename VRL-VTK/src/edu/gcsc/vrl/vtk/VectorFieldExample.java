@@ -26,7 +26,7 @@ public class VectorFieldExample implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public Visualization VectorFieldNonZeroExtraction(
+    public Visualization showVectorField(
             @ParamInfo(style = "load-dialog") File file,
             int elementInFile,
             @ParamInfo(name = "threshold", options = "value=0.00001") double threshold,

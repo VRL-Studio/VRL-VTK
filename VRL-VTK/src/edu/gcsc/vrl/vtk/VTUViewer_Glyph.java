@@ -39,9 +39,7 @@ import vtk.vtkXMLUnstructuredGridReader;
 public class VTUViewer_Glyph implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
-  
     private transient DefaultMethodRepresentation mRep;
-
 
     private void setDisplayStyle(vtkActor actor, String style) {
         if (style == "Surface") {
@@ -64,10 +62,9 @@ public class VTUViewer_Glyph implements java.io.Serializable {
 //            VMessage.info("debug", msg);
 //            
         } else {
-            System.out.println("Style ["+style+"] not found or nothing to do.");
+            System.out.println("Style [" + style + "] not found or nothing to do.");
         }
     }
-
 
     private File getLastFileInFolder(@ParamInfo(style = "load-folder-dialog") File dir,
             @ParamInfo(name = "beginning, e.g. \"file00\"") final String startsWith,
@@ -113,68 +110,55 @@ public class VTUViewer_Glyph implements java.io.Serializable {
         return result;
     }
 
-    
     public Visualization visualizeAll(
             MethodRequest mReq,
             @ParamGroupInfo(group = "Files|false|File depending data.")
-            @ParamInfo(name = "folderWithPlotFiles", style = "load-folder-dialog")
-                    File folder,
+            @ParamInfo(name = "folderWithPlotFiles", style = "load-folder-dialog") File folder,
             @ParamGroupInfo(group = "Files")
-            @ParamInfo(name = "beginning, e.g. \"file00\"") 
-                    String startsWith,
+            @ParamInfo(name = "beginning, e.g. \"file00\"") String startsWith,
             @ParamGroupInfo(group = "Files")
-            @ParamInfo(name = "elementInFile", options = "value=0")
-                    int elementInFile,
+            @ParamInfo(name = "elementInFile", options = "value=0") int elementInFile,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "makePNG", options = "value=false")
             final boolean makePNG,
             @ParamGroupInfo(group = "Plot|false|Plot depending data.")
-            @ParamInfo(name = "Title", style = "default") 
-                    String title,
+            @ParamInfo(name = "Title", style = "default") String title,
             @ParamGroupInfo(group = "Plot")
             @ParamInfo(name = "waiting in ms", options = "value=0")
             final long wait,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Range", style = "selection", options = "value=[\"Auto\",\"Min/Max\"]") 
-                    String sRange,
+            @ParamInfo(name = "Range", style = "selection", options = "value=[\"Auto\",\"Min/Max\"]") String sRange,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Min", style = "default", options = "value=0") 
-                    double minValueRange,
+            @ParamInfo(name = "Min", style = "default", options = "value=0") double minValueRange,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Max", style = "default", options = "value=1") 
-                    double maxValueRange,
-//            @ParamGroupInfo(group = "Plot")
-//            @ParamInfo(name = "Show Data Legend", style = "default", options = "value=true; invokeOnChange=true") 
-//                    boolean bShowLegend,
-//            @ParamGroupInfo(group = "Plot")
-//            @ParamInfo(name = "Show Outline", style = "default", options = "value=false; invokeOnChange=true")
-//                    boolean bShowOutline,
-//            @ParamGroupInfo(group = "Plot")
-//            @ParamInfo(name = "Show Orientation", style = "default", options = "invokeOnChange=true")
-//                    boolean showOrientation,
+            @ParamInfo(name = "Max", style = "default", options = "value=1") double maxValueRange,
+            //            @ParamGroupInfo(group = "Plot")
+            //            @ParamInfo(name = "Show Data Legend", style = "default", options = "value=true; invokeOnChange=true") 
+            //                    boolean bShowLegend,
+            //            @ParamGroupInfo(group = "Plot")
+            //            @ParamInfo(name = "Show Outline", style = "default", options = "value=false; invokeOnChange=true")
+            //                    boolean bShowOutline,
+            //            @ParamGroupInfo(group = "Plot")
+            //            @ParamInfo(name = "Show Orientation", style = "default", options = "invokeOnChange=true")
+            //                    boolean showOrientation,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Show Data Legend", style = "default", options = "value=true") 
-                    boolean bShowLegend,
+            @ParamInfo(name = "Show Data Legend", style = "default", options = "value=true") boolean bShowLegend,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Show Outline", style = "default", options = "value=false")
-                    boolean bShowOutline,
+            @ParamInfo(name = "Show Outline", style = "default", options = "value=false") boolean bShowOutline,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Show Orientation", style = "default")
-                    boolean showOrientation,
+            @ParamInfo(name = "Show Orientation", style = "default") boolean showOrientation,
             @ParamGroupInfo(group = "Filters|false|Choose which filter should be used.")
-            @ParamInfo(name = "Display Style", style = "selection", 
-                    options = "value=[\"Surface\",\"Surface/Edge\",\"Wireframe\",\"Points\", \"Vectorfield\"]") 
-                    String sDisplayStyle,
+            @ParamInfo(name = "Display Style", style = "selection",
+            options = "value=[\"Surface\",\"Surface/Edge\",\"Wireframe\",\"Points\", \"Vectorfield\"]") String sDisplayStyle,
             @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Data Filter", style = "selection", 
-                    options = "value=[\"None\",\"Warp (Auto)\",\"Warp (Factor)\", \"Contour\"]")
-                    String sDataStyle,
+            @ParamInfo(name = "Data Filter", style = "selection",
+            options = "value=[\"None\",\"Warp (Auto)\",\"Warp (Factor)\", \"Contour\"]") String sDataStyle,
             @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Warp Factor", style = "default", options = "value=1") 
-                    double warpFactor,
+            @ParamInfo(name = "Warp Factor", style = "default", options = "value=1") double warpFactor,
             @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Num Contour", style = "default", options = "value=5") 
-                    int numContours) {
+            @ParamInfo(name = "Num Contour", style = "default", options = "value=5") int numContours,
+            @ParamGroupInfo(group = "Filters")
+            @ParamInfo(name = "scale factor", style = "default", options = "value=0.05") double scaleFactor) {
 
         mRep = mReq.getMethod();
 
@@ -215,225 +199,186 @@ public class VTUViewer_Glyph implements java.io.Serializable {
             // get point Data for component
             ////////////////////////////////////
             int numVisCompData = ug.GetPointData().GetNumberOfArrays();
-            
+
             System.out.println("ELEMENTS/ARRAYS IN FILE:");
             for (int i = 0; i < numVisCompData; i++) {
-                
-                System.out.println(i+") "+ ug.GetPointData().GetArrayName(i));
-                
+
+                System.out.println(i + ") " + ug.GetPointData().GetArrayName(i));
+
             }
-            
-            
+
+
             System.out.println("Components IN FILE:");
             for (int i = 0; i < ug.GetPointData().GetNumberOfComponents(); i++) {
-                
-                System.out.println("("+i+",0) "+ ug.GetPointData().GetComponent(i,0));
-                
+
+                System.out.println("(" + i + ",0) " + ug.GetPointData().GetComponent(i, 0));
+
             }
-            
-            System.out.println("Tuples IN FILE: "+ ug.GetPointData().GetNumberOfTuples());
-                
-            
+
+            System.out.println("Tuples IN FILE: " + ug.GetPointData().GetNumberOfTuples());
+
+
             if (numVisCompData < elementInFile) {
-                String msg = "There are only "+ numVisCompData +" elements in the selected file."
-                        + " And you want to select: "+ elementInFile;
-                
+                String msg = "There are only " + numVisCompData + " elements in the selected file."
+                        + " And you want to select: " + elementInFile;
+
                 VMessage.error("Wrong Parameter", msg);
-                
+
                 System.err.println(msg);
-                
+
                 VMessage.info("Hint", "Notice that if you want to get the first element"
                         + "in file you need to tip 0 (zero).");
-                
+
                 return visualization;
             }
-            
+
             String visCompDataName = ug.GetPointData().GetArrayName(elementInFile);
-            
-            VMessage.info("visCompDataName is "+elementInFile+ "elementInFile", visCompDataName);
-            
+
+            VMessage.info("visCompDataName is " + elementInFile + "elementInFile", visCompDataName);
+
             ug.GetPointData().SetScalars(ug.GetPointData().GetArray(visCompDataName));
 
-            ////////////////////////////////////
-            // create value lookup table
-            ////////////////////////////////////
-            vtkLookupTable hueLut = new vtkLookupTable();
-            
-            if (sRange == "Auto") {
-                double[] valRange = ug.GetPointData().GetScalars().GetRange();
-                minValueRange = valRange[0];
-                maxValueRange = valRange[1];
-            }
-            hueLut.SetTableRange(minValueRange, maxValueRange);
-            hueLut.SetHueRange(0.0, 1);
-            hueLut.SetSaturationRange(0.6, 1);
-            hueLut.SetValueRange(1, 1);
-            hueLut.Build();
+//            ////////////////////////////////////
+//            // create value lookup table
+//            ////////////////////////////////////
+//            vtkLookupTable hueLut = new vtkLookupTable();
+//
+//            if (sRange == "Auto") {
+//                double[] valRange = ug.GetPointData().GetScalars().GetRange();
+//                minValueRange = valRange[0];
+//                maxValueRange = valRange[1];
+//            }
+//            hueLut.SetTableRange(minValueRange, maxValueRange);
+//            hueLut.SetHueRange(0.0, 1);
+//            hueLut.SetSaturationRange(0.6, 1);
+//            hueLut.SetValueRange(1, 1);
+//            hueLut.Build();
+//
+//            if (bShowLegend) {
+//                visualization.setLookupTable(hueLut);
+//            }
 
-            if (bShowLegend) {
-                visualization.setLookupTable(hueLut);
-            }
-
-            ////////////////////////////////////
-            // create plain data visualization
-            ////////////////////////////////////
-            if (sDataStyle == "None") {
-                vtkLookupTable plainMapperTable = new vtkLookupTable();
-                plainMapperTable.DeepCopy(hueLut);
-
-                vtkDataSetMapper plainMapper = new vtkDataSetMapper();
-                plainMapper.SetInput(ug);
-                plainMapper.ScalarVisibilityOn();
-                plainMapper.SetColorModeToMapScalars();
-                plainMapper.SetScalarRange(plainMapperTable.GetTableRange());
-                plainMapper.SetLookupTable(plainMapperTable);
-
-                vtkActor plainActor = new vtkActor();
-                plainActor.SetMapper(plainMapper);
-                setDisplayStyle(plainActor, sDisplayStyle);
-
-                visualization.addActor(plainActor);
-            }
-
-            ////////////////////////////////////
-            // create warped data visualization
-            ////////////////////////////////////
-            if (sDataStyle == "Warp (Auto)" || sDataStyle == "Warp (Factor)") {
-                double[] valueMinMax = ug.GetPointData().GetScalars().GetRange();
-                double factor = 1.0 / (valueMinMax[1] - valueMinMax[0]);
-                if (sDataStyle == "Warp (Factor)") {
-                    factor = warpFactor;
-                }
-
-                vtkWarpScalar warpScalar = new vtkWarpScalar();
-                warpScalar.SetInput(ug);
-                warpScalar.SetScaleFactor(factor);
-                warpScalar.Update();
-
-                vtkLookupTable warpTable = new vtkLookupTable();
-                warpTable.DeepCopy(hueLut);
-
-                vtkDataSetMapper warpMapper = new vtkDataSetMapper();
-                warpMapper.SetInputConnection(warpScalar.GetOutputPort());
-                warpMapper.SetScalarRange(warpTable.GetTableRange());
-                warpMapper.SetLookupTable(warpTable);
-
-                vtkActor warpActor = new vtkActor();
-                warpActor.SetMapper(warpMapper);
-                setDisplayStyle(warpActor, sDisplayStyle);
-
-                visualization.addActor(warpActor);
-            }
-
-            ////////////////////////////////////
-            // create contour filter
-            ////////////////////////////////////
-            if (sDataStyle == "Contour") {
-
-                vtkLookupTable contTable = new vtkLookupTable();
-                contTable.DeepCopy(hueLut);
-
-                vtkContourFilter contours = new vtkContourFilter();
-                contours.SetInput(ug);
-                contours.GenerateValues(numContours, contTable.GetTableRange());
-
-                vtkPolyDataMapper contMapper = new vtkPolyDataMapper();
-                contMapper.SetInput(contours.GetOutput());
-                contMapper.SetScalarRange(contTable.GetTableRange());
-                contMapper.SetLookupTable(contTable);
-
-                vtkActor contActor = new vtkActor();
-                contActor.SetMapper(contMapper);
-                setDisplayStyle(contActor, sDisplayStyle);
-
-                visualization.addActor(contActor);
-            }
+//            ////////////////////////////////////
+//            // create plain data visualization
+//            ////////////////////////////////////
+//            if (sDataStyle == "None") {
+//                vtkLookupTable plainMapperTable = new vtkLookupTable();
+//                plainMapperTable.DeepCopy(hueLut);
+//
+//                vtkDataSetMapper plainMapper = new vtkDataSetMapper();
+//                plainMapper.SetInput(ug);
+//                plainMapper.ScalarVisibilityOn();
+//                plainMapper.SetColorModeToMapScalars();
+//                plainMapper.SetScalarRange(plainMapperTable.GetTableRange());
+//                plainMapper.SetLookupTable(plainMapperTable);
+//
+//                vtkActor plainActor = new vtkActor();
+//                plainActor.SetMapper(plainMapper);
+//                setDisplayStyle(plainActor, sDisplayStyle);
+//
+//                visualization.addActor(plainActor);
+//            }
+//
+//            ////////////////////////////////////
+//            // create warped data visualization
+//            ////////////////////////////////////
+//            if (sDataStyle == "Warp (Auto)" || sDataStyle == "Warp (Factor)") {
+//                double[] valueMinMax = ug.GetPointData().GetScalars().GetRange();
+//                double factor = 1.0 / (valueMinMax[1] - valueMinMax[0]);
+//                if (sDataStyle == "Warp (Factor)") {
+//                    factor = warpFactor;
+//                }
+//
+//                vtkWarpScalar warpScalar = new vtkWarpScalar();
+//                warpScalar.SetInput(ug);
+//                warpScalar.SetScaleFactor(factor);
+//                warpScalar.Update();
+//
+//                vtkLookupTable warpTable = new vtkLookupTable();
+//                warpTable.DeepCopy(hueLut);
+//
+//                vtkDataSetMapper warpMapper = new vtkDataSetMapper();
+//                warpMapper.SetInputConnection(warpScalar.GetOutputPort());
+//                warpMapper.SetScalarRange(warpTable.GetTableRange());
+//                warpMapper.SetLookupTable(warpTable);
+//
+//                vtkActor warpActor = new vtkActor();
+//                warpActor.SetMapper(warpMapper);
+//                setDisplayStyle(warpActor, sDisplayStyle);
+//
+//                visualization.addActor(warpActor);
+//            }
+//
+//            ////////////////////////////////////
+//            // create contour filter
+//            ////////////////////////////////////
+//            if (sDataStyle == "Contour") {
+//
+//                vtkLookupTable contTable = new vtkLookupTable();
+//                contTable.DeepCopy(hueLut);
+//
+//                vtkContourFilter contours = new vtkContourFilter();
+//                contours.SetInput(ug);
+//                contours.GenerateValues(numContours, contTable.GetTableRange());
+//
+//                vtkPolyDataMapper contMapper = new vtkPolyDataMapper();
+//                contMapper.SetInput(contours.GetOutput());
+//                contMapper.SetScalarRange(contTable.GetTableRange());
+//                contMapper.SetLookupTable(contTable);
+//
+//                vtkActor contActor = new vtkActor();
+//                contActor.SetMapper(contMapper);
+//                setDisplayStyle(contActor, sDisplayStyle);
+//
+//                visualization.addActor(contActor);
+//            }
 
             ////////////////////////////////////
             // create vector field
             ////////////////////////////////////
-            if (sDataStyle == "Vectorfield") {
-                
-                vtkArrowSource arrow = new vtkArrowSource();
-                arrow.SetTipResolution(6);
-                arrow.SetTipRadius(0.1);
-                arrow.SetTipLength(0.35);
-                arrow.SetShaftResolution(6);
-                arrow.SetShaftRadius( 0.03);
+            if (sDisplayStyle.equals("Vectorfield")) {
 
-//                vtkGlyph3D glyph = new vtkGlyph3D();
-                vtkGlyph2D glyph = new vtkGlyph2D();
-                glyph.SetInput(ug);//reader.GetOutput(elementInFile));//reader.GetOutputPort());
-                glyph.SetSource(arrow.GetOutput());//arrow.GetOutputPort());
-                glyph.SetVectorModeToUseVector();
-                glyph.SetColorModeToColorByScalar();
-                glyph.SetScaleModeToDataScalingOff();
-                glyph.OrientOn();
-                glyph.SetScaleFactor(0.2);
 
-                vtkPolyDataMapper glyphMapper = new vtkPolyDataMapper();
-                glyphMapper.SetInput(glyph.GetOutput());
-                glyphMapper.SetLookupTable(hueLut);
-                glyphMapper.ScalarVisibilityOn();
-                //   eval
-                glyphMapper.SetScalarRange(reader.GetOutput().GetScalarRange());
+                reader.SetFileName(file.getAbsolutePath());
+                reader.Update();
+                vtkUnstructuredGrid image = reader.GetOutput();
+                image.GetPointData().SetVectors(image.GetPointData().GetArray(elementInFile));
 
-                vtkActor glyphActor = new vtkActor();
-                glyphActor.SetMapper( glyphMapper);//contourMapper);
 
-                visualization.addActor(glyphActor);
-                
-////                // Setup the arrows
-////                vtkArrowSource arrowSource = new vtkArrowSource();
-////                arrowSource.SetInputConnection(elementInFile, ug.GetProducerPort());
-////                arrowSource.Update();
-////
-////                vtkGlyph2D glyph = new vtkGlyph2D();
-////                glyph.SetInput(elementInFile,ug);
-////                glyph.SetSourceConnection(arrowSource.GetOutputPort());
-////                glyph.SetVectorModeToUseNormal();
-////                glyph.SetScaleModeToScaleByVector();
-////                glyph.SetScaleFactor(0.25);
-////                
-////
-////                vtkPolyDataMapper spikeMapper = new vtkPolyDataMapper();
-////                spikeMapper.SetInputConnection(glyph.GetOutputPort());
-////                spikeMapper.SetLookupTable(hueLut);
-////                
-////                vtkActor spikeActor = new vtkActor();
-////                spikeActor.SetMapper(spikeMapper);
-////
-////                
-////                setDisplayStyle(spikeActor, sDisplayStyle);
-////
-////                visualization.addActor(spikeActor);
-                
-//                vtkGlyph3D glyph = new vtkGlyph3D();
-//                glyph.SetInputConnection(sphere.GetOutputPort());
-//                glyph.SetSourceConnection(cone.GetOutputPort());
-//                glyph.SetVectorModeToUseNormal();
-//                glyph.SetScaleModeToScaleByVector();
-//                glyph.SetScaleFactor(0.25);
-//
-//                vtkPolyDataMapper spikeMapper = new vtkPolyDataMapper();
-//                spikeMapper.SetInputConnection(glyph.GetOutputPort());
-//                
-//                vtkActor spikeActor = new vtkActor();
-//                spikeActor.SetMapper(spikeMapper);
-//
-//                visualization.addActor(spikeActor);
+                // represent vector field
+                vtkGlyph3D vectorGlyph = new vtkGlyph3D();
+                vtkArrowSource arrowSource = new vtkArrowSource();
+                vtkPolyDataMapper vectorGlyphMapper = new vtkPolyDataMapper();
 
-//  vtkSmartPointer<vtkArrowSource> arrowSource = new vtkSmartPointer(vtkArrowSource);
-//  arrowSource.Update();
-// 
-//  vtkSmartPointer<vtkGlyph2D> glyphFilter = new vtkSmartPointer<vtkGlyph2D>();
-//  glyphFilter.SetSourceConnection(arrowSource.GetOutputPort());
-//  glyphFilter.OrientOn();
-//  glyphFilter.SetVectorModeToUseVector();
-//
-//  glyphFilter.SetInputData(image);
-//
-//  glyphFilter.Update();
+                int n = image.GetPointData().GetNumberOfArrays();
+                for (int i = 0; i < n; i++) {
+                    System.out.println("name of array[" + i + "]: " + image.GetPointData().GetArrayName(i));
+                }
+
+
+                vectorGlyph.SetInputConnection(image.GetProducerPort());
+
+                vectorGlyph.SetSourceConnection(arrowSource.GetOutputPort());
+                vectorGlyph.SetScaleModeToScaleByVector();
+                vectorGlyph.SetVectorModeToUseVector();
+                vectorGlyph.ScalingOn();
+                vectorGlyph.OrientOn();
+                vectorGlyph.SetInputArrayToProcess(
+                        elementInFile,
+                        image.GetInformation());
+
+                vectorGlyph.SetScaleFactor(scaleFactor);
+
+                vectorGlyph.Update();
+
+                vectorGlyphMapper.SetInputConnection(vectorGlyph.GetOutputPort());
+                vectorGlyphMapper.Update();
+
+                vtkActor vectorActor = new vtkActor();
+                vectorActor.SetMapper(vectorGlyphMapper);
+
+
+                visualization.addActor(vectorActor);
             }
 
 
@@ -465,7 +410,7 @@ public class VTUViewer_Glyph implements java.io.Serializable {
 
                     if (makePNG) {
 
-                        String[] split = fileName.split(".vtu" );
+                        String[] split = fileName.split(".vtu");
                         File pngFile = new File(split[0] + ".png");
                         ((VTKOutputType) mRep.getReturnValue()).saveImage(pngFile);
                     }
@@ -484,6 +429,4 @@ public class VTUViewer_Glyph implements java.io.Serializable {
 
         return lastVisualization;
     }
-    
-    
 }
