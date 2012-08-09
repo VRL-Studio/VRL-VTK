@@ -7,6 +7,7 @@ import eu.mihosoft.vrl.annotation.ParamInfo;
 import eu.mihosoft.vrl.reflection.DefaultMethodRepresentation;
 import eu.mihosoft.vrl.reflection.VisualCanvas;
 import eu.mihosoft.vrl.system.VMessage;
+import eu.mihosoft.vrl.system.VRL;
 import eu.mihosoft.vrl.types.CanvasRequest;
 import eu.mihosoft.vrl.types.MethodRequest;
 import eu.mihosoft.vrl.types.VisualIDRequest;
@@ -336,13 +337,20 @@ public class VTUViewer implements java.io.Serializable {
 
                     return fileAccept && nameAccept;
                 }
-            })) {
+            }))// fore end 
+            {
                 if (f.isFile()) {
                     result.add(f);
                 }
             }
 
-        } else {
+        }
+        // if a file is directly choosen, add it
+        if (dir != null && dir.isFile()) {
+            result.add(dir);
+        } 
+        
+        else {
             //
             throw new RuntimeException("Viewer: path '" + dir.getName() + "' not found.");
         }
@@ -354,17 +362,17 @@ public class VTUViewer implements java.io.Serializable {
     public Visualization visualizeAll(
             MethodRequest mReq,
             @ParamGroupInfo(group = "Files|false|File depending data.")
-            @ParamInfo(name = "folderWithPlotFiles", style = "load-folder-dialog")
+            @ParamInfo(name = "folderWithPlotFiles", style = "observe-load-dialog", options="fileAnalyser=\"VTUAnalyser\";tag=\"element\"")
                     File folder,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "beginning, e.g. \"file00\"") 
                     String startsWith,
-//            @ParamGroupInfo(group = "Files")
-//            @ParamInfo(name = "ending, e.g. \"vtu\"")
-//            final String ending,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "elementInFile", options = "value=0")
                     int elementInFile,
+//            @ParamGroupInfo(group = "Files")
+//            @ParamInfo(name = "elementInFile", style = "observe-load-dialog", options="fileAnalyser=\"VTUAnalyser\";tag=\"element\"")
+//                    String elementInFile,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "makePNG", options = "value=false")
             final boolean makePNG,
@@ -450,7 +458,7 @@ public class VTUViewer implements java.io.Serializable {
 
             if (title.isEmpty()) {
 
-                visualization.setTitle(file.getName());
+//                visualization.setTitle(file.getName());
             } else {
                 visualization.setTitle(title);
             }
@@ -492,11 +500,14 @@ public class VTUViewer implements java.io.Serializable {
 
                 return visualization;
             }
+            
 
             String visCompDataName = ug.GetPointData().GetArrayName(elementInFile);
             ug.GetPointData().SetScalars(ug.GetPointData().GetArray(visCompDataName));
             
-//            VMessage.info("visCompDataName is " + elementInFile + " elementInFile", visCompDataName);
+            VMessage.info("visCompDataName is " + elementInFile + " elementInFile", visCompDataName);
+            
+//            ug.GetPointData().SetScalars(ug.GetPointData().GetArray(elementInFile));
 
             ////////////////////////////////////
             // create value lookup table
@@ -613,6 +624,10 @@ public class VTUViewer implements java.io.Serializable {
                     System.out.println("name of array[" + i + "]: " + image.GetPointData().GetArrayName(i));
                 }
 
+                
+//                VTUAnalyser analyser = (VTUAnalyser) VRL.getFileAnalysers().get("vtu-analyser");
+//                int index = analyser.getFileEntries().indexOf(elementInFile);
+                
                 vectorGlyph.SetInputConnection(image.GetProducerPort());
 
                 vectorGlyph.SetSourceConnection(arrowSource.GetOutputPort());
@@ -622,6 +637,7 @@ public class VTUViewer implements java.io.Serializable {
                 vectorGlyph.OrientOn();
                 vectorGlyph.SetInputArrayToProcess(
                         elementInFile,
+//                        index,
                         image.GetInformation());
 
                 vectorGlyph.SetScaleFactor(scaleFactor);

@@ -238,100 +238,100 @@ public class VTUViewer_Glyph implements java.io.Serializable {
 
             ug.GetPointData().SetScalars(ug.GetPointData().GetArray(visCompDataName));
 
-//            ////////////////////////////////////
-//            // create value lookup table
-//            ////////////////////////////////////
-//            vtkLookupTable hueLut = new vtkLookupTable();
-//
-//            if (sRange == "Auto") {
-//                double[] valRange = ug.GetPointData().GetScalars().GetRange();
-//                minValueRange = valRange[0];
-//                maxValueRange = valRange[1];
-//            }
-//            hueLut.SetTableRange(minValueRange, maxValueRange);
-//            hueLut.SetHueRange(0.0, 1);
-//            hueLut.SetSaturationRange(0.6, 1);
-//            hueLut.SetValueRange(1, 1);
-//            hueLut.Build();
-//
-//            if (bShowLegend) {
-//                visualization.setLookupTable(hueLut);
-//            }
+            ////////////////////////////////////
+            // create value lookup table
+            ////////////////////////////////////
+            vtkLookupTable hueLut = new vtkLookupTable();
 
-//            ////////////////////////////////////
-//            // create plain data visualization
-//            ////////////////////////////////////
-//            if (sDataStyle == "None") {
-//                vtkLookupTable plainMapperTable = new vtkLookupTable();
-//                plainMapperTable.DeepCopy(hueLut);
-//
-//                vtkDataSetMapper plainMapper = new vtkDataSetMapper();
-//                plainMapper.SetInput(ug);
-//                plainMapper.ScalarVisibilityOn();
-//                plainMapper.SetColorModeToMapScalars();
-//                plainMapper.SetScalarRange(plainMapperTable.GetTableRange());
-//                plainMapper.SetLookupTable(plainMapperTable);
-//
-//                vtkActor plainActor = new vtkActor();
-//                plainActor.SetMapper(plainMapper);
-//                setDisplayStyle(plainActor, sDisplayStyle);
-//
-//                visualization.addActor(plainActor);
-//            }
-//
-//            ////////////////////////////////////
-//            // create warped data visualization
-//            ////////////////////////////////////
-//            if (sDataStyle == "Warp (Auto)" || sDataStyle == "Warp (Factor)") {
-//                double[] valueMinMax = ug.GetPointData().GetScalars().GetRange();
-//                double factor = 1.0 / (valueMinMax[1] - valueMinMax[0]);
-//                if (sDataStyle == "Warp (Factor)") {
-//                    factor = warpFactor;
-//                }
-//
-//                vtkWarpScalar warpScalar = new vtkWarpScalar();
-//                warpScalar.SetInput(ug);
-//                warpScalar.SetScaleFactor(factor);
-//                warpScalar.Update();
-//
-//                vtkLookupTable warpTable = new vtkLookupTable();
-//                warpTable.DeepCopy(hueLut);
-//
-//                vtkDataSetMapper warpMapper = new vtkDataSetMapper();
-//                warpMapper.SetInputConnection(warpScalar.GetOutputPort());
-//                warpMapper.SetScalarRange(warpTable.GetTableRange());
-//                warpMapper.SetLookupTable(warpTable);
-//
-//                vtkActor warpActor = new vtkActor();
-//                warpActor.SetMapper(warpMapper);
-//                setDisplayStyle(warpActor, sDisplayStyle);
-//
-//                visualization.addActor(warpActor);
-//            }
-//
-//            ////////////////////////////////////
-//            // create contour filter
-//            ////////////////////////////////////
-//            if (sDataStyle == "Contour") {
-//
-//                vtkLookupTable contTable = new vtkLookupTable();
-//                contTable.DeepCopy(hueLut);
-//
-//                vtkContourFilter contours = new vtkContourFilter();
-//                contours.SetInput(ug);
-//                contours.GenerateValues(numContours, contTable.GetTableRange());
-//
-//                vtkPolyDataMapper contMapper = new vtkPolyDataMapper();
-//                contMapper.SetInput(contours.GetOutput());
-//                contMapper.SetScalarRange(contTable.GetTableRange());
-//                contMapper.SetLookupTable(contTable);
-//
-//                vtkActor contActor = new vtkActor();
-//                contActor.SetMapper(contMapper);
-//                setDisplayStyle(contActor, sDisplayStyle);
-//
-//                visualization.addActor(contActor);
-//            }
+            if (sRange == "Auto") {
+                double[] valRange = ug.GetPointData().GetScalars().GetRange();
+                minValueRange = valRange[0];
+                maxValueRange = valRange[1];
+            }
+            hueLut.SetTableRange(minValueRange, maxValueRange);
+            hueLut.SetHueRange(0.0, 1);
+            hueLut.SetSaturationRange(0.6, 1);
+            hueLut.SetValueRange(1, 1);
+            hueLut.Build();
+
+            if (bShowLegend) {
+                visualization.setLookupTable(hueLut);
+            }
+
+            ////////////////////////////////////
+            // create plain data visualization
+            ////////////////////////////////////
+            if (sDataStyle == "None") {
+                vtkLookupTable plainMapperTable = new vtkLookupTable();
+                plainMapperTable.DeepCopy(hueLut);
+
+                vtkDataSetMapper plainMapper = new vtkDataSetMapper();
+                plainMapper.SetInput(ug);
+                plainMapper.ScalarVisibilityOn();
+                plainMapper.SetColorModeToMapScalars();
+                plainMapper.SetScalarRange(plainMapperTable.GetTableRange());
+                plainMapper.SetLookupTable(plainMapperTable);
+
+                vtkActor plainActor = new vtkActor();
+                plainActor.SetMapper(plainMapper);
+                setDisplayStyle(plainActor, sDisplayStyle);
+
+                visualization.addActor(plainActor);
+            }
+
+            ////////////////////////////////////
+            // create warped data visualization
+            ////////////////////////////////////
+            if (sDataStyle == "Warp (Auto)" || sDataStyle == "Warp (Factor)") {
+                double[] valueMinMax = ug.GetPointData().GetScalars().GetRange();
+                double factor = 1.0 / (valueMinMax[1] - valueMinMax[0]);
+                if (sDataStyle == "Warp (Factor)") {
+                    factor = warpFactor;
+                }
+
+                vtkWarpScalar warpScalar = new vtkWarpScalar();
+                warpScalar.SetInput(ug);
+                warpScalar.SetScaleFactor(factor);
+                warpScalar.Update();
+
+                vtkLookupTable warpTable = new vtkLookupTable();
+                warpTable.DeepCopy(hueLut);
+
+                vtkDataSetMapper warpMapper = new vtkDataSetMapper();
+                warpMapper.SetInputConnection(warpScalar.GetOutputPort());
+                warpMapper.SetScalarRange(warpTable.GetTableRange());
+                warpMapper.SetLookupTable(warpTable);
+
+                vtkActor warpActor = new vtkActor();
+                warpActor.SetMapper(warpMapper);
+                setDisplayStyle(warpActor, sDisplayStyle);
+
+                visualization.addActor(warpActor);
+            }
+
+            ////////////////////////////////////
+            // create contour filter
+            ////////////////////////////////////
+            if (sDataStyle == "Contour") {
+
+                vtkLookupTable contTable = new vtkLookupTable();
+                contTable.DeepCopy(hueLut);
+
+                vtkContourFilter contours = new vtkContourFilter();
+                contours.SetInput(ug);
+                contours.GenerateValues(numContours, contTable.GetTableRange());
+
+                vtkPolyDataMapper contMapper = new vtkPolyDataMapper();
+                contMapper.SetInput(contours.GetOutput());
+                contMapper.SetScalarRange(contTable.GetTableRange());
+                contMapper.SetLookupTable(contTable);
+
+                vtkActor contActor = new vtkActor();
+                contActor.SetMapper(contMapper);
+                setDisplayStyle(contActor, sDisplayStyle);
+
+                visualization.addActor(contActor);
+            }
 
             ////////////////////////////////////
             // create vector field
