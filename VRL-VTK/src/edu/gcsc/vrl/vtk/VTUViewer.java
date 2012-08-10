@@ -367,12 +367,12 @@ public class VTUViewer implements java.io.Serializable {
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "beginning, e.g. \"file00\"") 
                     String startsWith,
-            @ParamGroupInfo(group = "Files")
-            @ParamInfo(name = "elementInFile", options = "value=0")
-                    int elementInFile,
 //            @ParamGroupInfo(group = "Files")
-//            @ParamInfo(name = "elementInFile", style = "observe-load-dialog", options="fileAnalyser=\"VTUAnalyser\";tag=\"element\"")
-//                    String elementInFile,
+//            @ParamInfo(name = "elementInFile", options = "value=0")
+//                    int elementInFile,
+            @ParamGroupInfo(group = "Files")
+            @ParamInfo(name = "elementInFile", style = "observe-load-dialog", options="fileAnalyser=\"VTUAnalyser\";tag=\"element\"")
+                    String elementInFile,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "makePNG", options = "value=false")
             final boolean makePNG,
@@ -487,27 +487,27 @@ public class VTUViewer implements java.io.Serializable {
 
             System.out.println("Tuples IN FILE: " + ug.GetPointData().GetNumberOfTuples());
 
-            if (numVisCompData < elementInFile) {
-                String msg = "There are only " + numVisCompData + " elements in the selected file."
-                        + " And you want to select: " + elementInFile;
-
-                VMessage.error("Wrong Parameter", msg);
-
-                System.err.println(msg);
-
-                VMessage.info("Hint", "Notice that if you want to get the first element"
-                        + "in file you need to tip 0 (zero).");
-
-                return visualization;
-            }
+//            if (numVisCompData < elementInFile) {
+//                String msg = "There are only " + numVisCompData + " elements in the selected file."
+//                        + " And you want to select: " + elementInFile;
+//
+//                VMessage.error("Wrong Parameter", msg);
+//
+//                System.err.println(msg);
+//
+//                VMessage.info("Hint", "Notice that if you want to get the first element"
+//                        + "in file you need to tip 0 (zero).");
+//
+//                return visualization;
+//            }
+//            
+//
+//            String visCompDataName = ug.GetPointData().GetArrayName(elementInFile);
+//            ug.GetPointData().SetScalars(ug.GetPointData().GetArray(visCompDataName));
+//            
+//            VMessage.info("visCompDataName is " + elementInFile + " elementInFile", visCompDataName);
             
-
-            String visCompDataName = ug.GetPointData().GetArrayName(elementInFile);
-            ug.GetPointData().SetScalars(ug.GetPointData().GetArray(visCompDataName));
-            
-            VMessage.info("visCompDataName is " + elementInFile + " elementInFile", visCompDataName);
-            
-//            ug.GetPointData().SetScalars(ug.GetPointData().GetArray(elementInFile));
+            ug.GetPointData().SetScalars(ug.GetPointData().GetArray(elementInFile));
 
             ////////////////////////////////////
             // create value lookup table
@@ -625,8 +625,11 @@ public class VTUViewer implements java.io.Serializable {
                 }
 
                 
-//                VTUAnalyser analyser = (VTUAnalyser) VRL.getFileAnalysers().get("vtu-analyser");
-//                int index = analyser.getFileEntries().indexOf(elementInFile);
+                VTUAnalyser analyser = (VTUAnalyser) VRL.getFileAnalysers().get("vtu-analyser");
+                
+                System.out.println("elementInFile = "+ elementInFile);
+                
+                int index = analyser.getFileEntries().indexOf(elementInFile);
                 
                 vectorGlyph.SetInputConnection(image.GetProducerPort());
 
@@ -636,8 +639,8 @@ public class VTUViewer implements java.io.Serializable {
                 vectorGlyph.ScalingOn();
                 vectorGlyph.OrientOn();
                 vectorGlyph.SetInputArrayToProcess(
-                        elementInFile,
-//                        index,
+//                        elementInFile,
+                        index,
                         image.GetInformation());
 
                 vectorGlyph.SetScaleFactor(scaleFactor);

@@ -73,6 +73,9 @@ class VTUAnalyser implements FileAnalyser {
         ArrayList<File> result = new ArrayList<File>();
 
         if (dir != null && dir.isDirectory()) {
+            
+            System.out.println(getClass().getSimpleName()+" getAllFilesInFolder() DIR");
+            
             for (File f : dir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File pathName) {
@@ -93,9 +96,15 @@ class VTUAnalyser implements FileAnalyser {
                 }
             }
 
-        } else {
+        } else if (dir != null && dir.isFile()) {
+            System.out.println(getClass().getSimpleName()+" getAllFilesInFolder() FILE");
+                    result.add(dir);
+                } 
+        
+        else {
             //
-            throw new RuntimeException("Viewer: path '" + dir.getName() + "' not found.");
+            throw new RuntimeException("Viewer: name = '" + dir.getName() + "' not found."+
+                    "\npath = "+ dir.getAbsolutePath());
         }
 
         return result;
