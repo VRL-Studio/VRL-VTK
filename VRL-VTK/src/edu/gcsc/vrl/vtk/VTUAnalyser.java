@@ -19,7 +19,7 @@ import vtk.vtkXMLUnstructuredGridReader;
 class VTUAnalyser implements FileAnalyser {
 
     private String ending = "vtu";
-    private String startsWith = null;
+    private String startsWith = "";
     private List<String> fileEntries = new ArrayList<String>();
     private File lastFile = null;
 

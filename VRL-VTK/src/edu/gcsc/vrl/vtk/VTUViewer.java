@@ -333,7 +333,7 @@ public class VTUViewer implements java.io.Serializable {
 
                     String fileName = pathName.getPath().substring(sep + 1, dot);
 
-                    boolean nameAccept = startsWith == "" || fileName.startsWith(startsWith);
+                    boolean nameAccept = startsWith.equals("") || fileName.startsWith(startsWith);
 
                     return fileAccept && nameAccept;
                 }
@@ -346,14 +346,14 @@ public class VTUViewer implements java.io.Serializable {
 
         }
         // if a file is directly choosen, add it
-        if (dir != null && dir.isFile()) {
+        else if (dir != null && dir.isFile()) {
             result.add(dir);
         } 
         
-        else {
-            //
-            throw new RuntimeException("Viewer: path '" + dir.getName() + "' not found.");
-        }
+//        else {
+//            //
+//            throw new RuntimeException("VTUViewer.getAllFilesInFolder(): path '" + dir.getName() + "' not found.");
+//        }
 
         return result;
     }
@@ -434,10 +434,7 @@ public class VTUViewer implements java.io.Serializable {
 //            folder = InternFile;
 //        }
 //
-//        if (folder == null) {
-//            return new Visualization();
-//        }
-//        if (!folder.exists()) {
+//        if ((folder == null) || (!folder.exists())) {
 //            return new Visualization();
 //        }
 
@@ -453,9 +450,6 @@ public class VTUViewer implements java.io.Serializable {
             // create vis object to add all components
             final Visualization visualization = new Visualization();
 
-            final String fileName = file.getAbsolutePath();//getAbsoluteFile();
-//            System.out.println("-- fileName = "+ fileName);
-
             if (title.isEmpty()) {
 
 //                visualization.setTitle(file.getName());
@@ -465,27 +459,31 @@ public class VTUViewer implements java.io.Serializable {
 
             vtkXMLUnstructuredGridReader reader = new vtkXMLUnstructuredGridReader();
 
-//            System.out.println("-- reader = "+ reader);
+            
+            final String fileName = file.getAbsolutePath();//getAbsoluteFile();
+//            System.out.println("-- fileName = "+ fileName);
+            
             reader.SetFileName(fileName);
             reader.Update();
             vtkUnstructuredGrid ug = reader.GetOutput();
+            ug.GetPointData().SetScalars(ug.GetPointData().GetArray(elementInFile));
 
             ////////////////////////////////////
             // get point Data for component
             ////////////////////////////////////
-            int numVisCompData = ug.GetPointData().GetNumberOfArrays();
+//            int numVisCompData = ug.GetPointData().GetNumberOfArrays();
 
-            System.out.println("ELEMENTS/ARRAYS IN FILE:");
-            for (int i = 0; i < numVisCompData; i++) {
-                System.out.println(i + ") " + ug.GetPointData().GetArrayName(i));
-            }
-
-            System.out.println("Components IN FILE:");
-            for (int i = 0; i < ug.GetPointData().GetNumberOfComponents(); i++) {
-                System.out.println("(" + i + ",0) " + ug.GetPointData().GetComponent(i, 0));
-            }
-
-            System.out.println("Tuples IN FILE: " + ug.GetPointData().GetNumberOfTuples());
+//            System.out.println("ELEMENTS/ARRAYS IN FILE:");
+//            for (int i = 0; i < numVisCompData; i++) {
+//                System.out.println(i + ") " + ug.GetPointData().GetArrayName(i));
+//            }
+//
+//            System.out.println("Components IN FILE:");
+//            for (int i = 0; i < ug.GetPointData().GetNumberOfComponents(); i++) {
+//                System.out.println("(" + i + ",0) " + ug.GetPointData().GetComponent(i, 0));
+//            }
+//
+//            System.out.println("Tuples IN FILE: " + ug.GetPointData().GetNumberOfTuples());
 
 //            if (numVisCompData < elementInFile) {
 //                String msg = "There are only " + numVisCompData + " elements in the selected file."
@@ -507,7 +505,6 @@ public class VTUViewer implements java.io.Serializable {
 //            
 //            VMessage.info("visCompDataName is " + elementInFile + " elementInFile", visCompDataName);
             
-            ug.GetPointData().SetScalars(ug.GetPointData().GetArray(elementInFile));
 
             ////////////////////////////////////
             // create value lookup table
@@ -625,9 +622,15 @@ public class VTUViewer implements java.io.Serializable {
                 }
 
                 
-                VTUAnalyser analyser = (VTUAnalyser) VRL.getFileAnalysers().get("vtu-analyser");
+                VTUAnalyser analyser = (VTUAnalyser) VRL.getFileAnalysers().get(VTUAnalyser.class.getSimpleName());
+                analyser.setStartsWith(startsWith);
                 
                 System.out.println("elementInFile = "+ elementInFile);
+                System.out.println("analyser = "+analyser);
+                System.out.println("analyser.getFileEntries().size() = "+analyser.getFileEntries().size());
+                for (int i = 0; i < analyser.getFileEntries().size(); i++) {
+                    System.out.println(i+") "+ analyser.getFileEntries().get(i) );                    
+                }
                 
                 int index = analyser.getFileEntries().indexOf(elementInFile);
                 
@@ -674,7 +677,6 @@ public class VTUViewer implements java.io.Serializable {
                 visualization.addActor(outlineActor);
             }
 
-
             visualization.setOrientationVisible(showOrientation);
 
 
@@ -700,7 +702,7 @@ public class VTUViewer implements java.io.Serializable {
             });
 
             lastVisualization = visualization;
-
+            
         }//for (File file : allFiles)
 
         return lastVisualization;

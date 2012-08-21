@@ -77,7 +77,7 @@ public class Configurator extends VPluginConfigurator {
 
     public void init(InitPluginAPI iApi) {
         
-        VRL.getFileAnalysers().put("VTUAnalyser", new VTUAnalyser());
+        VRL.getFileAnalysers().put(VTUAnalyser.class.getSimpleName(), new VTUAnalyser());
         
         
         templateProjectSrc = new File(iApi.getResourceFolder(), "vtk-template01.vrlp");
