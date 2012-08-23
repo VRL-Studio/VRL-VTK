@@ -4,7 +4,7 @@
  */
 package edu.gcsc.vrl.vtk;
 
-import eu.mihosoft.vrl.types.observe.FileAnalyser;
+import eu.mihosoft.vrl.types.observe.FileAnalyzer;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
@@ -16,14 +16,14 @@ import vtk.vtkXMLUnstructuredGridReader;
  *
  * @author Christian Poliwoda <christian.poliwoda@gcsc.uni-frankfurt.de>
  */
-class VTUAnalyser implements FileAnalyser {
+class VTUAnalyzer implements FileAnalyzer {
 
     private String ending = "vtu";
     private String startsWith = "";
     private List<String> fileEntries = new ArrayList<String>();
     private File lastFile = null;
 
-    public VTUAnalyser() {
+    public VTUAnalyzer() {
     }
 
     /**

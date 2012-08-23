@@ -57,15 +57,20 @@ public class VectorFieldExample implements Serializable {
 //        image.GetPointData().AddArray(magnitudeFilter.GetOutput().GetPointData().GetScalars());
 //        image.GetPointData().SetActiveScalars("Magnitude");
 
-        vtkThresholdPoints thresholdVector = new vtkThresholdPoints();
-        thresholdVector.SetInput(image);
-        thresholdVector.SetInputArrayToProcess(
-                elementInFile,
-                image.GetInformation());
+        
+//        vtkThresholdPoints thresholdVector = new vtkThresholdPoints();
+//        thresholdVector.SetInput(image);
+//        thresholdVector.SetInputArrayToProcess(
+//                elementInFile,
+//                image.GetInformation());
+//
+//        thresholdVector.ThresholdByUpper(threshold);
+//        thresholdVector.Update();
+//        
+//        vtkPolyData tmp = thresholdVector.GetOutput();
+//        System.out.println("number of thresholded points: " + tmp.GetNumberOfPoints());
 
-        thresholdVector.ThresholdByUpper(threshold);
-        thresholdVector.Update();
-
+        
         // in case you want to save imageData
         //vtkXMLPolyDataWriter writer = vtkXMLPolyDataWriter.New();
         //writer.SetFileName("output.vtp");
@@ -110,8 +115,6 @@ public class VectorFieldExample implements Serializable {
             System.out.println("name of array[" + i + "]: " + image.GetPointData().GetArrayName(i));
         }
 
-        vtkPolyData tmp = thresholdVector.GetOutput();
-        System.out.println("number of thresholded points: " + tmp.GetNumberOfPoints());
 //        vectorGlyph.SetInputConnection(thresholdVector.GetOutputPort());
 //        vectorGlyph.SetInputConnection(thresholdVector.GetOutputPort());
 
@@ -139,6 +142,8 @@ public class VectorFieldExample implements Serializable {
         vectorGlyph.SetVectorModeToUseVector();
         vectorGlyph.ScalingOn();
         vectorGlyph.OrientOn();
+        vectorGlyph.SetColorModeToColorByVector();//color the glyphs
+        
         vectorGlyph.SetInputArrayToProcess(
                 elementInFile,
                 image.GetInformation());
@@ -152,7 +157,6 @@ public class VectorFieldExample implements Serializable {
 
         vtkActor vectorActor = new vtkActor();
         vectorActor.SetMapper(vectorGlyphMapper);
-
 
         vis.addActor(vectorActor);
 

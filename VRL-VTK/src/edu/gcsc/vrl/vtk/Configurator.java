@@ -6,6 +6,7 @@ package edu.gcsc.vrl.vtk;
 
 import eu.mihosoft.vrl.io.IOUtil;
 import eu.mihosoft.vrl.system.*;
+import eu.mihosoft.vrl.types.observe.VTypeObserveUtil;
 import eu.mihosoft.vrl.visual.ActionDelelator;
 import eu.mihosoft.vrl.visual.VAction;
 import eu.mihosoft.vrl.visual.VSwingUtil;
@@ -77,7 +78,8 @@ public class Configurator extends VPluginConfigurator {
 
     public void init(InitPluginAPI iApi) {
         
-        VRL.getFileAnalysers().put(VTUAnalyser.class.getSimpleName(), new VTUAnalyser());
+        VTypeObserveUtil.addFileAnalyzer(new VTUAnalyzer());
+//        VRL.getFileAnalysers().put(VTUAnalyzer.class.getSimpleName(), new VTUAnalyzer());
         
         
         templateProjectSrc = new File(iApi.getResourceFolder(), "vtk-template01.vrlp");
