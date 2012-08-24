@@ -20,9 +20,11 @@ import java.util.logging.Logger;
 import vtk.vtkActor;
 import vtk.vtkArrowSource;
 import vtk.vtkContourFilter;
+import vtk.vtkDataArray;
 import vtk.vtkDataSetMapper;
 import vtk.vtkGlyph3D;
 import vtk.vtkLookupTable;
+import vtk.vtkMapper;
 import vtk.vtkOutlineFilter;
 import vtk.vtkPolyDataMapper;
 import vtk.vtkUnstructuredGrid;
@@ -744,23 +746,10 @@ public class VTUViewer implements java.io.Serializable {
         vtkArrowSource arrowSource = new vtkArrowSource();
         vtkPolyDataMapper vectorGlyphMapper = new vtkPolyDataMapper();
 
-        int n = ug.GetPointData().GetNumberOfArrays();
-        for (int i = 0; i < n; i++) {
-            System.out.println("name of array[" + i + "]: " + ug.GetPointData().GetArrayName(i));
-        }
-
-        VTUAnalyzer analyzer = (VTUAnalyzer) VTypeObserveUtil.
-                getFileAnanlyzerByName(VTUAnalyzer.class.getSimpleName());
-        analyzer.setStartsWith(startsWith);
-
-        System.out.println("elementInFile = " + elementInFile);
-        System.out.println("analyser = " + analyzer);
-        System.out.println("analyser.getFileEntries().size() = " + analyzer.getFileEntries().size());
-        for (int i = 0; i < analyzer.getFileEntries().size(); i++) {
-            System.out.println(i + ") " + analyzer.getFileEntries().get(i));
-        }
-
-        int index = analyzer.getFileEntries().indexOf(elementInFile);
+//        int n = ug.GetPointData().GetNumberOfArrays();
+//        for (int i = 0; i < n; i++) {
+//            System.out.println("name of array[" + i + "]: " + ug.GetPointData().GetArrayName(i));
+//        }
 
         vectorGlyph.SetInputConnection(ug.GetProducerPort());
         vectorGlyph.SetSourceConnection(arrowSource.GetOutputPort());
@@ -771,6 +760,20 @@ public class VTUViewer implements java.io.Serializable {
         vectorGlyph.OrientOn();
         vectorGlyph.SetColorModeToColorByVector();//color the glyphs
 
+        VTUAnalyzer analyzer = (VTUAnalyzer) VTypeObserveUtil.
+                getFileAnanlyzerByName(VTUAnalyzer.class.getSimpleName());
+        analyzer.setStartsWith(startsWith);
+
+//        System.out.println("elementInFile = " + elementInFile);
+//        System.out.println("analyser = " + analyzer);
+//        System.out.println("analyser.getFileEntries().size() = " + analyzer.getFileEntries().size());
+//        for (int i = 0; i < analyzer.getFileEntries().size(); i++) {
+//            System.out.println(i + ") " + analyzer.getFileEntries().get(i));
+//        }
+
+        int index = analyzer.getFileEntries().indexOf(elementInFile);
+
+        
         vectorGlyph.SetInputArrayToProcess(
                 //  elementInFile,
                 index,
@@ -840,4 +843,61 @@ public class VTUViewer implements java.io.Serializable {
             }
         });
     }
+    
+    private vtkDataArray getElementInFileID(vtkUnstructuredGrid ug, String elementInFile) {
+
+        vtkDataArray id = ug.GetPointData().GetArray(elementInFile);
+
+        if (id == null) {
+            
+            String msg = getClass().getSimpleName() + ".getElementInFileID() \n"
+                    + "id == null";
+            
+            System.err.println(msg);
+            
+            VMessage.warning("null", msg);
+            
+            throw new NullPointerException(msg);
+        }
+
+        return id;
+    }
+
+    private void settingScalarsOrVectors(String sDisplayStyle,
+            vtkUnstructuredGrid ug, String elementInFile) {
+
+        vtkDataArray id = getElementInFileID(ug, elementInFile);
+
+        if (sDisplayStyle.equals("Vectorfield")) {
+
+            ug.GetPointData().SetVectors(id);
+
+        }else{
+            
+            ug.GetPointData().SetScalars(id);
+        }
+    }
+
+     private void settingsForMappers(String sDisplayStyle, vtkUnstructuredGrid ug,
+            vtkMapper mapper, vtkLookupTable lookupTable) {
+        
+        mapper.SetInputConnection(ug.GetProducerPort());
+        mapper.SetLookupTable(lookupTable);
+        
+        if (!sDisplayStyle.equals("Vectorfield")) {
+
+            mapper.SetScalarRange(lookupTable.GetTableRange());
+            mapper.ScalarVisibilityOn();
+            mapper.SetColorModeToMapScalars();
+
+        } else if (sDisplayStyle.equals("Vectorfield")) {
+
+//            mapper.ScalarVisibilityOff();
+        mapper.ScalarVisibilityOn();//color for glyphs
+        
+        }
+
+        mapper.Update();
+    }
+
 }
