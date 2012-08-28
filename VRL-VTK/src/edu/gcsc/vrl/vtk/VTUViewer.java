@@ -215,12 +215,13 @@ public class VTUViewer implements java.io.Serializable {
     }
 
     private void setDisplayStyle(vtkActor actor, String style) {
-        String msg = getClass().getSimpleName()
-                + ".setDisplayStyle(vtkActor actor, String style).\n"
-                + "actor = " + actor.GetClassName() + "\n"
-                + "style = " + style;
-        System.out.println(msg);
-        VMessage.info("debug-info", msg);
+
+//        String msg = getClass().getSimpleName()
+//                + ".setDisplayStyle(vtkActor actor, String style).\n"
+//                + "actor = " + actor.GetClassName() + "\n"
+//                + "style = " + style;
+//        System.out.println(msg);
+//        VMessage.info("debug-info", msg);
 
         if (style.equals("Surface")) {
             actor.GetProperty().SetRepresentationToSurface();
@@ -463,11 +464,8 @@ public class VTUViewer implements java.io.Serializable {
 
             vtkUnstructuredGrid ug = reader.GetOutput();
 
-            if (!sDisplayStyle.equals("Vectorfield")) {
-                ug.GetPointData().SetScalars(ug.GetPointData().GetArray(elementInFile));
-            } else {
-                ug.GetPointData().SetVectors(ug.GetPointData().GetArray(elementInFile));
-            }
+
+            settingScalarsOrVectors(sDisplayStyle, ug, elementInFile);
 
             ////////////////////////////////////
             // get point Data for component
@@ -510,17 +508,17 @@ public class VTUViewer implements java.io.Serializable {
             // create value lookup table
             ////////////////////////////////////
             vtkLookupTable defaultLookupTable = createLookupTable(
-                    sRange, ug,
+                    sRange, sDataStyle, ug,
                     minValueRange, maxValueRange,
-                    bShowLegend, visualization);
+                    bShowLegend, visualization, elementInFile);
 
             ////////////////////////////////////
             // create plain data visualization
             ////////////////////////////////////
             if (sDataStyle.equals("None")) {
                 createPlainDataVisualization(
-                        sDataStyle, defaultLookupTable,
-                        ug, sDisplayStyle, visualization);
+                        defaultLookupTable, ug,
+                        sDisplayStyle, visualization);
             }
             ////////////////////////////////////
             // create warped data visualization
@@ -528,7 +526,7 @@ public class VTUViewer implements java.io.Serializable {
             if (sDataStyle.equals("Warp (Auto)") || sDataStyle.equals("Warp (Factor)")) {
 
                 createWarpDataVisualization(ug, sDataStyle, warpFactor,
-                        defaultLookupTable, sDisplayStyle, visualization);
+                        defaultLookupTable, sDisplayStyle, visualization, elementInFile);
             }
 
             ////////////////////////////////////
@@ -582,31 +580,60 @@ public class VTUViewer implements java.io.Serializable {
      * @param visualization
      * @return
      */
-    private vtkLookupTable createLookupTable(String sRange,
+    private vtkLookupTable createLookupTable(String sRange, String sDataStyle,
             vtkUnstructuredGrid ug, double minValueRange, double maxValueRange,
-            boolean bShowLegend, final Visualization visualization) {
+            boolean bShowLegend, final Visualization visualization, String elementInFile) {
 
         vtkLookupTable defaultLookupTable = new vtkLookupTable();
 
-        if (sRange.equals("Auto") && ug.GetPointData().GetScalars() != null) {
+//        if (sRange.equals("Auto") && ug.GetPointData().GetScalars() != null) {
+//
+//            double[] valRange = ug.GetPointData().GetScalars().GetRange();
+//
+//            minValueRange = valRange[0];
+//            maxValueRange = valRange[1];
+//
+//        } else if (sRange.equals("Auto") && ug.GetPointData().GetVectors() != null) {
+//
+//            double[] valRange = ug.GetPointData().GetVectors().GetRange();
+//
+//            minValueRange = valRange[0];
+//            maxValueRange = valRange[1];
+//        }
 
-            double[] valRange = ug.GetPointData().GetScalars().GetRange();
-            minValueRange = valRange[0];
-            maxValueRange = valRange[1];
+//        settingScalarsOrVectors(sDataStyle, ug, elementInFile);
 
-        } else if (sRange.equals("Auto") && ug.GetPointData().GetVectors() != null) {
+        double[] valRange;
 
-            double[] valRange = ug.GetPointData().GetVectors().GetRange();
+        if (sRange.equals("Auto")) {
+
+            valRange = getRange(sDataStyle, ug, elementInFile);
+
             minValueRange = valRange[0];
             maxValueRange = valRange[1];
         }
 
-        defaultLookupTable.SetTableRange(minValueRange, maxValueRange);
-        defaultLookupTable.SetHueRange(0.0, 1);
-        defaultLookupTable.SetSaturationRange(0.6, 1);
-        defaultLookupTable.SetValueRange(1, 1);
-        defaultLookupTable.Build();
+        if (!sDataStyle.equals("Vectorfield")) {
+            
+            defaultLookupTable.SetTableRange(minValueRange, maxValueRange);
+            defaultLookupTable.SetHueRange(0.0, 1);
+            defaultLookupTable.SetSaturationRange(0.6, 1);
+            defaultLookupTable.SetValueRange(1, 1);
+            
+        } else if (sDataStyle.equals("Vectorfield") && sRange.equals("None")) {
+            
+            defaultLookupTable.SetTableRange(0.0, 0.0);
+            defaultLookupTable.SetHueRange(0.0, 0.0);
+            defaultLookupTable.SetSaturationRange(0.0, 0.0);
+            defaultLookupTable.SetValueRange(0.0, 0.0);
+            
+            defaultLookupTable.SetScale(0);
+            defaultLookupTable.SetAlphaRange(0, 0);
+            
+        }
 
+        defaultLookupTable.Build();
+        
         if (bShowLegend) {
             visualization.setLookupTable(defaultLookupTable);
         }
@@ -622,25 +649,29 @@ public class VTUViewer implements java.io.Serializable {
      * @param sDisplayStyle
      * @param visualization
      */
-    private void createPlainDataVisualization(String sDataStyle,
+    private void createPlainDataVisualization(
             vtkLookupTable defaultLookupTable, vtkUnstructuredGrid ug,
             String sDisplayStyle, final Visualization visualization) {
 
-        vtkLookupTable noneLookupTable = new vtkLookupTable();
-        noneLookupTable.DeepCopy(defaultLookupTable);
+        vtkLookupTable plainLookupTable = new vtkLookupTable();
+        plainLookupTable.DeepCopy(defaultLookupTable);
 
-        vtkDataSetMapper noneMapper = new vtkDataSetMapper();
-        noneMapper.SetInput(ug);
-        noneMapper.ScalarVisibilityOn();
-        noneMapper.SetColorModeToMapScalars();
-        noneMapper.SetScalarRange(noneLookupTable.GetTableRange());
-        noneMapper.SetLookupTable(noneLookupTable);
+        vtkDataSetMapper plainMapper = new vtkDataSetMapper();
+        plainMapper.SetInput(ug);
 
-        vtkActor noneActor = new vtkActor();
-        noneActor.SetMapper(noneMapper);
-        setDisplayStyle(noneActor, sDisplayStyle);
+//        plainMapper.ScalarVisibilityOn();
+//        plainMapper.SetColorModeToMapScalars();
+//        plainMapper.SetScalarRange(plainLookupTable.GetTableRange());
+//        plainMapper.SetLookupTable(plainLookupTable);
 
-        visualization.addActor(noneActor);
+        settingsForMappers(sDisplayStyle, plainMapper, plainLookupTable);
+
+        vtkActor plainActor = new vtkActor();
+        plainActor.SetMapper(plainMapper);
+
+        setDisplayStyle(plainActor, sDisplayStyle);
+
+        visualization.addActor(plainActor);
 
     }
 
@@ -657,9 +688,11 @@ public class VTUViewer implements java.io.Serializable {
     private void createWarpDataVisualization(vtkUnstructuredGrid ug,
             String sDataStyle, double warpFactor,
             vtkLookupTable defaultLookupTable, String sDisplayStyle,
-            final Visualization visualization) {
+            final Visualization visualization, String elementInFile) {
 
-        double[] valueMinMax = ug.GetPointData().GetScalars().GetRange();
+//        double[] valueMinMax = ug.GetPointData().GetScalars().GetRange();
+        double[] valueMinMax = getRange(sDisplayStyle, ug, elementInFile);
+
         double factor = 1.0 / (valueMinMax[1] - valueMinMax[0]);
 
         if (sDataStyle.equals("Warp (Factor)")) {
@@ -676,11 +709,15 @@ public class VTUViewer implements java.io.Serializable {
 
         vtkDataSetMapper warpMapper = new vtkDataSetMapper();
         warpMapper.SetInputConnection(warpScalar.GetOutputPort());
-        warpMapper.SetScalarRange(warpTable.GetTableRange());
-        warpMapper.SetLookupTable(warpTable);
+
+//        warpMapper.SetScalarRange(warpTable.GetTableRange());
+//        warpMapper.SetLookupTable(warpTable);
+
+        settingsForMappers(sDisplayStyle, warpMapper, warpTable);
 
         vtkActor warpActor = new vtkActor();
         warpActor.SetMapper(warpMapper);
+
         setDisplayStyle(warpActor, sDisplayStyle);
 
         visualization.addActor(warpActor);
@@ -707,11 +744,15 @@ public class VTUViewer implements java.io.Serializable {
 
         vtkPolyDataMapper contourMapper = new vtkPolyDataMapper();
         contourMapper.SetInput(contours.GetOutput());
-        contourMapper.SetScalarRange(contourTable.GetTableRange());
-        contourMapper.SetLookupTable(contourTable);
+
+//        contourMapper.SetScalarRange(contourTable.GetTableRange());
+//        contourMapper.SetLookupTable(contourTable);
+
+        settingsForMappers(sDisplayStyle, contourMapper, contourTable);
 
         vtkActor contourActor = new vtkActor();
         contourActor.SetMapper(contourMapper);
+
         setDisplayStyle(contourActor, sDisplayStyle);
 
         visualization.addActor(contourActor);
@@ -744,7 +785,6 @@ public class VTUViewer implements java.io.Serializable {
         // represent vector field
         vtkGlyph3D vectorGlyph = new vtkGlyph3D();
         vtkArrowSource arrowSource = new vtkArrowSource();
-        vtkPolyDataMapper vectorGlyphMapper = new vtkPolyDataMapper();
 
 //        int n = ug.GetPointData().GetNumberOfArrays();
 //        for (int i = 0; i < n; i++) {
@@ -759,6 +799,8 @@ public class VTUViewer implements java.io.Serializable {
         vectorGlyph.ScalingOn();
         vectorGlyph.OrientOn();
         vectorGlyph.SetColorModeToColorByVector();//color the glyphs
+        vectorGlyph.SetScaleFactor(scaleFactor);
+//        vectorGlyph.SetScaleModeToDataScalingOff(); // all glyphs have same lenght 
 
         VTUAnalyzer analyzer = (VTUAnalyzer) VTypeObserveUtil.
                 getFileAnanlyzerByName(VTUAnalyzer.class.getSimpleName());
@@ -773,20 +815,23 @@ public class VTUViewer implements java.io.Serializable {
 
         int index = analyzer.getFileEntries().indexOf(elementInFile);
 
-        
+
         vectorGlyph.SetInputArrayToProcess(
                 //  elementInFile,
                 index,
                 ug.GetInformation());
 
-        vectorGlyph.SetScaleFactor(scaleFactor);
-
         vectorGlyph.Update();
 
+
+        vtkPolyDataMapper vectorGlyphMapper = new vtkPolyDataMapper();
         vectorGlyphMapper.SetInputConnection(vectorGlyph.GetOutputPort());
-        vectorGlyphMapper.ScalarVisibilityOn();//color for glyphs
-        vectorGlyphMapper.SetLookupTable(vectorfieldTable);// glyphs values/colors are orientated value range
-        vectorGlyphMapper.Update();
+
+//        vectorGlyphMapper.ScalarVisibilityOn();//color for glyphs
+//        vectorGlyphMapper.SetLookupTable(vectorfieldTable);// glyphs values/colors are orientated value range
+//        vectorGlyphMapper.Update();
+
+        settingsForMappers(sDisplayStyle, vectorGlyphMapper, vectorfieldTable);
 
         vtkActor vectorActor = new vtkActor();
         vectorActor.SetMapper(vectorGlyphMapper);
@@ -843,28 +888,41 @@ public class VTUViewer implements java.io.Serializable {
             }
         });
     }
-    
+
+    /**
+     *
+     * @param ug
+     * @param elementInFile
+     * @return
+     */
     private vtkDataArray getElementInFileID(vtkUnstructuredGrid ug, String elementInFile) {
 
         vtkDataArray id = ug.GetPointData().GetArray(elementInFile);
 
         if (id == null) {
-            
+
             String msg = getClass().getSimpleName() + ".getElementInFileID() \n"
                     + "id == null";
-            
+
             System.err.println(msg);
-            
+
             VMessage.warning("null", msg);
-            
+
             throw new NullPointerException(msg);
         }
 
         return id;
     }
 
+    /**
+     *
+     * @param sDisplayStyle
+     * @param ug
+     * @param elementInFile
+     */
     private void settingScalarsOrVectors(String sDisplayStyle,
-            vtkUnstructuredGrid ug, String elementInFile) {
+            vtkUnstructuredGrid ug,
+            String elementInFile) {
 
         vtkDataArray id = getElementInFileID(ug, elementInFile);
 
@@ -872,18 +930,47 @@ public class VTUViewer implements java.io.Serializable {
 
             ug.GetPointData().SetVectors(id);
 
-        }else{
-            
+        } else {
+
             ug.GetPointData().SetScalars(id);
         }
     }
 
-     private void settingsForMappers(String sDisplayStyle, vtkUnstructuredGrid ug,
+    /**
+     *
+     * @param sDisplayStyle
+     * @param ug
+     * @param elementInFile
+     * @return
+     */
+    private double[] getRange(String sDisplayStyle,
+            vtkUnstructuredGrid ug,
+            String elementInFile) {
+
+        settingScalarsOrVectors(sDisplayStyle, ug, elementInFile);
+
+        double[] valueMinMax;
+
+        if (sDisplayStyle.equals("Vectorfield")) {
+
+            valueMinMax = ug.GetPointData().GetVectors().GetRange();
+
+        } else {
+
+            valueMinMax = ug.GetPointData().GetScalars().GetRange();
+        }
+
+        return valueMinMax;
+    }
+
+    private void settingsForMappers(String sDisplayStyle, //vtkUnstructuredGrid ug,
             vtkMapper mapper, vtkLookupTable lookupTable) {
-        
-        mapper.SetInputConnection(ug.GetProducerPort());
+
+//        mapper.SetInputConnection(ug.GetProducerPort()); // DONT DO THESE HERE
+
+
         mapper.SetLookupTable(lookupTable);
-        
+
         if (!sDisplayStyle.equals("Vectorfield")) {
 
             mapper.SetScalarRange(lookupTable.GetTableRange());
@@ -892,12 +979,14 @@ public class VTUViewer implements java.io.Serializable {
 
         } else if (sDisplayStyle.equals("Vectorfield")) {
 
+            mapper.SetScalarRange(lookupTable.GetTableRange());
+
 //            mapper.ScalarVisibilityOff();
-        mapper.ScalarVisibilityOn();//color for glyphs
-        
+            mapper.ScalarVisibilityOn();//color for glyphs
+
+
         }
 
         mapper.Update();
     }
-
 }
