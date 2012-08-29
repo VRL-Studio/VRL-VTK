@@ -644,7 +644,7 @@ public class VTUViewer implements java.io.Serializable {
 
 
 //            defaultLookupTable.SetTableRange(0.0, 0.0);
-//            defaultLookupTable.SetHueRange(0.0, 0.0);
+            defaultLookupTable.SetHueRange(0.0, 1);
 //            defaultLookupTable.SetSaturationRange(0.0, 0.0);
 //            defaultLookupTable.SetValueRange(0.0, 0.0);
 //
@@ -869,7 +869,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkActor vectorActor = new vtkActor();
         vectorActor.SetMapper(vectorGlyphMapper);
         
-        
+        //optional setttings for lightning
         vtkProperty sliceProp = new vtkProperty();
         sliceProp.SetDiffuse(0.0);
         sliceProp.SetSpecular(0.0);

@@ -21,7 +21,7 @@ import vtk.vtkXMLUnstructuredGridReader;
  *
  * @author Christian Poliwoda <christian.poliwoda@gcsc.uni-frankfurt.de>
  */
-@ComponentInfo(name = "VectorFieldExample", category = "Custom")
+@ComponentInfo(name = "VectorFieldExample", category = "VTK")
 public class VectorFieldExample implements Serializable {
 
     private static final long serialVersionUID = 1L;

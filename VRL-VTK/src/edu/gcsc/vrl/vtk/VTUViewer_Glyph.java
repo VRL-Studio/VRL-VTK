@@ -35,7 +35,7 @@ import vtk.vtkXMLUnstructuredGridReader;
  * @author Andreas Vogel <andreas.vogel@gcsc.uni-frankfurt.de>
  * @author Christian Poliwoda <christian.poliwoda@gcsc.uni-frankfurt.de>
  */
-@ComponentInfo(name = "VTUViewer_Glyph", category = "Custom")
+@ComponentInfo(name = "VTUViewer_Glyph", category = "VTK")
 public class VTUViewer_Glyph implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
