@@ -38,7 +38,7 @@ import vtk.vtkXMLUnstructuredGridReader;
  * @author Andreas Vogel <andreas.vogel@gcsc.uni-frankfurt.de>
  * @author Christian Poliwoda <christian.poliwoda@gcsc.uni-frankfurt.de>
  */
-@ComponentInfo(name = "VTUViewer", category = "Custom")
+@ComponentInfo(name = "VTUViewer", category = "VTK")
 public class VTUViewer implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
