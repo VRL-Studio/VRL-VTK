@@ -27,6 +27,7 @@ import vtk.vtkLookupTable;
 import vtk.vtkMapper;
 import vtk.vtkOutlineFilter;
 import vtk.vtkPolyDataMapper;
+import vtk.vtkProperty;
 import vtk.vtkUnstructuredGrid;
 import vtk.vtkWarpScalar;
 import vtk.vtkXMLUnstructuredGridReader;
@@ -322,6 +323,15 @@ public class VTUViewer implements java.io.Serializable {
         return result.get(result.size() - 1);
     }
 
+    private File getFirstFileInFolder(@ParamInfo(style = "load-folder-dialog") File dir,
+            @ParamInfo(name = "beginning, e.g. \"file00\"") final String startsWith,
+            @ParamInfo(name = "ending, e.g. \"vtu\"") final String ending) {
+
+        ArrayList<File> result = getAllFilesInFolder(dir, startsWith, ending);
+
+        return result.get(0);
+    }
+
     private ArrayList<File> getAllFilesInFolder(@ParamInfo(style = "load-folder-dialog") File dir,
             @ParamInfo(name = "beginning, e.g. \"file00\"") final String startsWith,
             @ParamInfo(name = "ending, e.g. \"vtu\"") final String ending) {
@@ -508,7 +518,7 @@ public class VTUViewer implements java.io.Serializable {
             // create value lookup table
             ////////////////////////////////////
             vtkLookupTable defaultLookupTable = createLookupTable(
-                    sRange, sDataStyle, ug,
+                    sRange, sDisplayStyle, sDataStyle, ug,
                     minValueRange, maxValueRange,
                     bShowLegend, visualization, elementInFile);
 
@@ -580,7 +590,7 @@ public class VTUViewer implements java.io.Serializable {
      * @param visualization
      * @return
      */
-    private vtkLookupTable createLookupTable(String sRange, String sDataStyle,
+    private vtkLookupTable createLookupTable(String sRange, String sDisplayStyle, String sDataStyle,
             vtkUnstructuredGrid ug, double minValueRange, double maxValueRange,
             boolean bShowLegend, final Visualization visualization, String elementInFile) {
 
@@ -607,33 +617,56 @@ public class VTUViewer implements java.io.Serializable {
 
         if (sRange.equals("Auto")) {
 
-            valRange = getRange(sDataStyle, ug, elementInFile);
+            valRange = getRange(sDisplayStyle, ug, elementInFile);
 
             minValueRange = valRange[0];
             maxValueRange = valRange[1];
+
+
+//            VMessage.info(getClass().getSimpleName() + ".createLookupTable()",
+//                    " sRange == Auto \n"
+//                    + defaultLookupTable.Print());
         }
 
-        if (!sDataStyle.equals("Vectorfield")) {
-            
+        if (!sDisplayStyle.equals("Vectorfield")) {
+
             defaultLookupTable.SetTableRange(minValueRange, maxValueRange);
             defaultLookupTable.SetHueRange(0.0, 1);
             defaultLookupTable.SetSaturationRange(0.6, 1);
             defaultLookupTable.SetValueRange(1, 1);
+
+
+            VMessage.info(getClass().getSimpleName() + ".createLookupTable()",
+                    "sDataStyle != Vectorfield  \n"
+                    + defaultLookupTable.Print());
+
+        } else if (sDisplayStyle.equals("Vectorfield") && sDataStyle.equals("None")) {
+
+
+//            defaultLookupTable.SetTableRange(0.0, 0.0);
+//            defaultLookupTable.SetHueRange(0.0, 0.0);
+//            defaultLookupTable.SetSaturationRange(0.0, 0.0);
+//            defaultLookupTable.SetValueRange(0.0, 0.0);
+//
+//            defaultLookupTable.SetScale(0);
+//            defaultLookupTable.SetAlphaRange(0, 0);
             
-        } else if (sDataStyle.equals("Vectorfield") && sRange.equals("None")) {
-            
-            defaultLookupTable.SetTableRange(0.0, 0.0);
-            defaultLookupTable.SetHueRange(0.0, 0.0);
-            defaultLookupTable.SetSaturationRange(0.0, 0.0);
-            defaultLookupTable.SetValueRange(0.0, 0.0);
-            
-            defaultLookupTable.SetScale(0);
-            defaultLookupTable.SetAlphaRange(0, 0);
-            
+            defaultLookupTable.SetNanColor(0, 0, 0, 0);
+
+            VMessage.info(getClass().getSimpleName() + ".createLookupTable()",
+                    "sDataStyle == Vectorfield && sRange == None \n"
+                    + defaultLookupTable.Print());
+
+
         }
 
         defaultLookupTable.Build();
-        
+
+//        VMessage.info(getClass().getSimpleName()+".createLookupTable()",
+//                    "sdefaultLookupTable.Build() \n"
+//                    + defaultLookupTable.Print() );
+
+
         if (bShowLegend) {
             visualization.setLookupTable(defaultLookupTable);
         }
@@ -835,6 +868,15 @@ public class VTUViewer implements java.io.Serializable {
 
         vtkActor vectorActor = new vtkActor();
         vectorActor.SetMapper(vectorGlyphMapper);
+        
+        
+        vtkProperty sliceProp = new vtkProperty();
+        sliceProp.SetDiffuse(0.0);
+        sliceProp.SetSpecular(0.0);
+        sliceProp.SetAmbient(1.0);
+
+        vectorActor.SetProperty(sliceProp);
+        
 
         setDisplayStyle(vectorActor, sDisplayStyle);
 
@@ -926,13 +968,19 @@ public class VTUViewer implements java.io.Serializable {
 
         vtkDataArray id = getElementInFileID(ug, elementInFile);
 
+//        System.out.println("settingScalarsOrVectors(): \n"
+//                + "sDisplayStyle.equals(\"Vectorfield\") = "
+//                + sDisplayStyle.equals("Vectorfield"));
+
         if (sDisplayStyle.equals("Vectorfield")) {
 
             ug.GetPointData().SetVectors(id);
+//            ug.GetPointData().SetActiveVectors(elementInFile);
 
         } else {
 
             ug.GetPointData().SetScalars(id);
+//            ug.GetPointData().SetActiveScalars(elementInFile);
         }
     }
 
@@ -950,14 +998,33 @@ public class VTUViewer implements java.io.Serializable {
         settingScalarsOrVectors(sDisplayStyle, ug, elementInFile);
 
         double[] valueMinMax;
+        vtkDataArray dataArray;
 
         if (sDisplayStyle.equals("Vectorfield")) {
 
-            valueMinMax = ug.GetPointData().GetVectors().GetRange();
+            dataArray = ug.GetPointData().GetVectors();
+
 
         } else {
 
-            valueMinMax = ug.GetPointData().GetScalars().GetRange();
+            dataArray = ug.GetPointData().GetScalars();
+        }
+
+
+//            System.out.println("ug = "+ ug);
+//            System.out.println("ug.GetPointData() = "+ ug.GetPointData());
+        System.out.println("dataArray = " + dataArray);
+
+        if (dataArray != null) {
+            valueMinMax = dataArray.GetRange();
+            
+        } else {
+            VMessage.exception("ERROR", "The choosen parameter combination led to"
+                    + " an invalid state. Please check your selection. \n"
+                    + " E.g: select only vector field as DisplayStyle if the a"
+                    + " vector field is selected from a vtu file.");
+            
+            valueMinMax = null;
         }
 
         return valueMinMax;
