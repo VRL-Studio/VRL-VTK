@@ -74,15 +74,64 @@
     
     <property file="build.properties"/>
     
-    <target name="-post-jar">
+    <condition property="copyLinuxX86Natives">
+        <isset property="vtk.natives.linux.x86.dir"/>
+    </condition>
+    
+    <condition property="copyLinuxX64Natives">
+        <isset property="vtk.natives.linux.x64.dir"/>
+    </condition>
+    
+    <condition property="copyWindowsX86Natives">
+        <isset property="vtk.natives.windows.x86.dir"/>
+    </condition>
+    
+    <condition property="copyWindowsX64Natives">
+        <isset property="vtk.natives.windows.x64.dir"/>
+    </condition>
+    
+    <condition property="copyOSXNatives">
+        <isset property="vtk.natives.osx.dir"/>
+    </condition>
+    
+    <condition property="installPlugin">
+        <isset property="vrl.dir"/>
+    </condition>
+
+    
+    <target name="copy-linux-x86" if="copyLinuxX86Natives">
+        <copy file="${vtk.natives.linux.x86.dir}/natives.zip" todir="src/eu/mihosoft/vrl/plugin/content/natives/linux/x86/"/>
+    </target>
+    
+    <target name="copy-linux-x64" if="copyLinuxX64Natives">
+        <copy file="${vtk.natives.linux.x64.dir}/natives.zip" todir="src/eu/mihosoft/vrl/plugin/content/natives/linux/x64/"/>
+    </target>
+    
+    <target name="copy-windows-x86" if="copyWindowsX86Natives">
+        <copy file="${vtk.natives.windows.x86.dir}/natives.zip" todir="src/eu/mihosoft/vrl/plugin/content/natives/windows/x86/"/>
+    </target>
+    
+    <target name="copy-windows-x64" if="copyWindowsX64Natives">
+        <copy file="${vtk.natives.windows.x64.dir}/natives.zip" todir="src/eu/mihosoft/vrl/plugin/content/natives/windows/x64/"/>
+    </target>
+    
+    <target name="copy-osx" if="copyOSXNatives">
+        <copy file="${vtk.natives.osx.dir}/natives.zip" todir="src/eu/mihosoft/vrl/plugin/content/natives/osx/"/>
+    </target>
+    
+    <target name="-pre-compile" if="includeNatives" depends="copy-linux-x86, copy-linux-x64, copy-windows-x86, copy-linux-x64, copy-osx">
+        <echo message="Including natives libraries:"/>
+    </target>
+   
+    <target name="single-jar">
         <!-- Change the value of this property to be the name of your JAR,
-minus the .jar extension. It should not have spaces.
-<property name="store.jar.name" value="MyJarName"/>
--->
+        minus the .jar extension. It should not have spaces.
+        <property name="store.jar.name" value="MyJarName"/>
+        -->
         <property name="store.jar.name" value="VRL-VTK"/>
 
 
-<!-- don't edit below this line -->
+        <!-- don't edit below this line -->
 
         <property name="store.dir" value="dist-single"/>
         <property name="store.jar" value="${store.dir}/${store.jar.name}.jar"/>
@@ -120,11 +169,17 @@ minus the .jar extension. It should not have spaces.
         <delete dir="dist-single"/>
         <delete dir="dist/lib"/>
         
-        
-        
+    </target>
+    
+    <target name="install" depends="single-jar" if="installPlugin">
         <echo message="Copying ${dist.jar} to ${vrl.dir}/plugins"/>
         <copy 
             file="${dist.jar}" 
             todir="${vrl.dir}/plugin-updates"/>
     </target>
+    
+    <target name="-post-jar" depends="single-jar, install">
+        
+    </target>
+    
 </project>
