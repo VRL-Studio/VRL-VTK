@@ -4,16 +4,24 @@ import eu.mihosoft.vrl.annotation.ComponentInfo;
 import eu.mihosoft.vrl.annotation.MethodInfo;
 import eu.mihosoft.vrl.annotation.ParamGroupInfo;
 import eu.mihosoft.vrl.annotation.ParamInfo;
+import eu.mihosoft.vrl.dialogs.FileDialogManager;
 import eu.mihosoft.vrl.reflection.DefaultMethodRepresentation;
+import eu.mihosoft.vrl.reflection.TypeRepresentationBase;
 import eu.mihosoft.vrl.reflection.VisualCanvas;
+import eu.mihosoft.vrl.reflection.VisualObject;
 import eu.mihosoft.vrl.system.VMessage;
 import eu.mihosoft.vrl.types.CanvasRequest;
+import eu.mihosoft.vrl.types.InputCodeType;
 import eu.mihosoft.vrl.types.MethodRequest;
+import eu.mihosoft.vrl.types.SelectionInputType;
 import eu.mihosoft.vrl.types.VisualIDRequest;
+import eu.mihosoft.vrl.types.observe.LoadObserveFileType;
 import eu.mihosoft.vrl.types.observe.VTypeObserveUtil;
 import eu.mihosoft.vrl.visual.VSwingUtil;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
@@ -399,15 +407,238 @@ public class VTUViewer implements java.io.Serializable {
         return result;
     }
 
-//    @MethodInfo( valueStyle="default")
+    @MethodInfo(noGUI = true, callOptions = "assign-window")
+    public void showCode(VisualObject vObj) {
+
+        VisualCanvas canvas = (VisualCanvas) vObj.getMainCanvas();
+
+        final DefaultMethodRepresentation mRep = vObj.getObjectRepresentation().
+                getMethodBySignature("visualizeAll", MethodRequest.class,
+                File.class, String.class, String.class,
+                boolean.class, String.class, long.class,
+                String.class, double.class, double.class,
+                boolean.class, boolean.class, boolean.class,
+                String.class, String.class, double.class,
+                int.class, double.class);
+
+        System.out.println(" - - " + getClass().getSimpleName() + ".showCode(): ");
+
+        // START setting some parameters visible or not, depending on other parameters
+
+//        Assume mReq is parameter 0
+
+        final ActionListener fileOrFolderListener = new ActionListener() {
+            // set visibility for startsWith (2)
+            // depending on value of parameter folder (1)
+            public void actionPerformed(ActionEvent e) {
+
+                System.out.println(" - - before fileOrFolderListener: ");
+
+                if (e.getActionCommand().equals(
+                        LoadObserveFileType.FILE_OR_FOLDER_LOADED_ACTION)) {
+
+                    File folder = (File) mRep.getParameter(1).getViewValueWithoutValidation();
+
+//                    LoadObserveFileType tRep1 = (LoadObserveFileType) mRep.getParameter(1);
+//                    File folder = tRep1.getFileManager().getLatestFileOrFolder();
+                        
+                        System.out.println(" - - fileOrFolderListener: " + folder.getName());
+
+                        TypeRepresentationBase tRep = mRep.getParameter(2);
+
+                        if (folder.isDirectory()) {
+
+                            System.out.println(" - - folder.isDirectory() = " + folder.isDirectory());
+
+                            tRep.setVisible(true);
+                            tRep.getConnector().setVisible(true);
+
+                        } else if (folder.isFile()) {
+
+                            System.out.println(" - - folder.isFile() = " + folder.isFile());
+
+                            tRep.setVisible(false);
+                            tRep.getConnector().setVisible(false);
+                        }
+                    
+                }
+            }
+        };
+
+        final ActionListener sRangeListener = new ActionListener() {
+            // set visibility for min- max-ValueRange (8 & 9)
+            // depending on value of parameter sRange (7)
+            public void actionPerformed(ActionEvent e) {
+
+                System.out.println(" - - before sRangeListener: ");
+
+                if (e.getActionCommand().equals(
+                        //                        TypeRepresentationBase.SET_VIEW_VALUE_ACTION
+                        SelectionInputType.SELECTION_CHANGED_ACTION)) {
+
+                    String sRange = (String) mRep.getParameter(7).getViewValueWithoutValidation();
+
+                    System.out.println(" - - sRangeListener: " + sRange);
+
+                    TypeRepresentationBase tRep8 = mRep.getParameter(8);
+                    TypeRepresentationBase tRep9 = mRep.getParameter(9);
+
+                    if (sRange.equals(Range.AUTO)) {
+
+                        tRep8.setVisible(false);
+                        tRep8.getConnector().setVisible(false);
+
+                        tRep9.setVisible(false);
+                        tRep9.getConnector().setVisible(false);
+
+                    } else if (sRange.equals(Range.MIN_MAX)) {
+
+                        tRep8.setVisible(true);
+                        tRep8.getConnector().setVisible(true);
+
+                        tRep9.setVisible(true);
+                        tRep9.getConnector().setVisible(true);
+                    }
+                }
+            }
+        };
+
+        final ActionListener warpListener = new ActionListener() {
+            // set visibility for warpfactor (15)
+            // depending on value of parameter sDataStyle (14)
+            public void actionPerformed(ActionEvent e) {
+
+
+                System.out.println(" - - before warpListener: ");
+
+                if (e.getActionCommand().equals(
+                        //                        TypeRepresentationBase.SET_VIEW_VALUE_ACTION
+                        SelectionInputType.SELECTION_CHANGED_ACTION)) {
+
+                    String sDataStyle = (String) mRep.getParameter(14).getViewValueWithoutValidation();
+
+                    System.out.println(" - - warpListener: " + sDataStyle);
+
+                    TypeRepresentationBase tRep = mRep.getParameter(15);
+
+                    if (sDataStyle.equals(DataStyle.WARP_FACTOR)) {
+
+                        tRep.setVisible(true);
+                        tRep.getConnector().setVisible(true);
+
+                    } else {
+
+                        tRep.setVisible(false);
+                        tRep.getConnector().setVisible(false);
+                    }
+
+                }
+            }
+        };
+
+        final ActionListener contourListener = new ActionListener() {
+            // set visibility for contourfactor (16)
+            // depending on value of parameter sDataStyle (14)
+            public void actionPerformed(ActionEvent e) {
+
+                System.out.println(" - - before contourListener: ");
+
+                if (e.getActionCommand().equals(
+                        //                        TypeRepresentationBase.SET_VIEW_VALUE_ACTION
+                        SelectionInputType.SELECTION_CHANGED_ACTION)) {
+
+                    String sDataStyle = (String) mRep.getParameter(14).getViewValueWithoutValidation();
+
+                    System.out.println(" - - contourListener: " + sDataStyle);
+
+                    TypeRepresentationBase tRep = mRep.getParameter(16);
+
+                    if (sDataStyle.equals(DataStyle.CONTOUR)) {
+                        tRep.setVisible(true);
+                        tRep.getConnector().setVisible(true);
+
+                    } else {
+                        tRep.setVisible(false);
+                        tRep.getConnector().setVisible(false);
+                    }
+                }
+            }
+        };
+
+        final ActionListener fieldScaleListener = new ActionListener() {
+            // set visibility for contourfactor (17)
+            // depending on value of parameter sDisplayStyle (13)
+            public void actionPerformed(ActionEvent e) {
+
+                System.out.println(" - - before fieldScaleListener: ");
+
+                if (e.getActionCommand().equals(
+                        //                        TypeRepresentationBase.SET_VIEW_VALUE_ACTION
+                        SelectionInputType.SELECTION_CHANGED_ACTION)) {
+
+                    String sDisplayStyle = (String) mRep.getParameter(13).getViewValueWithoutValidation();
+
+                    System.out.println(" - - fieldScaleListener: " + sDisplayStyle);
+
+                    TypeRepresentationBase tRep = mRep.getParameter(17);
+
+                    if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
+
+                        tRep.setVisible(true);
+                        tRep.getConnector().setVisible(true);
+
+                    } else {
+
+                        tRep.setVisible(false);
+                        tRep.getConnector().setVisible(false);
+
+                    }
+                }
+            }
+        };
+
+        System.out.println(" - - mRep.getParameter(13) = " + mRep.getParameter(13));
+
+        mRep.getParameter(13).getActionListeners().add(fieldScaleListener);
+        mRep.getParameter(14).getActionListeners().add(contourListener);
+        mRep.getParameter(14).getActionListeners().add(warpListener);
+        mRep.getParameter(7).getActionListeners().add(sRangeListener);
+        mRep.getParameter(1).getActionListeners().add(fileOrFolderListener);
+
+
+        // START init action (dirty but needed)
+        ArrayList<ActionListener> listeners = new ArrayList<ActionListener>();
+        listeners.add(fieldScaleListener);
+        listeners.add(contourListener);
+        listeners.add(warpListener);
+        listeners.add(sRangeListener);
+        listeners.add(fileOrFolderListener);
+
+        System.out.println(" - - fore ActionListeners.actionPerformed(): ");
+        for (ActionListener al : listeners) {
+            al.actionPerformed(new ActionEvent(this, 0, TypeRepresentationBase.SET_VIEW_VALUE_ACTION));
+            al.actionPerformed(new ActionEvent(this, 0, LoadObserveFileType.FILE_OR_FOLDER_LOADED_ACTION));
+            al.actionPerformed(new ActionEvent(this, 0, SelectionInputType.SELECTION_CHANGED_ACTION));
+        }
+        // END init action (dirty but needed)
+
+        System.out.println(" - -  ActionListener added ");
+
+        // END setting some parameters visable or not depending on others
+
+
+    }
+
+    @MethodInfo( hide = false)
     public Visualization visualizeAll(
             MethodRequest mReq,
             @ParamGroupInfo(group = "Files|false|File depending data.")
             @ParamInfo(name = "folderWithPlotFiles",
             style = "observe-load-dialog",
-            options = "fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") File folder,
+            options = "fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") final File folder,
             @ParamGroupInfo(group = "Files")
-            @ParamInfo(name = "beginning, e.g. \"file00\"") String startsWith,
+            @ParamInfo(name = "beginning, e.g. \"file00\"",
+            nullIsValid = true) String startsWith,
             //            @ParamGroupInfo(group = "Files")
             //            @ParamInfo(name = "elementInFile", options = "value=0")
             //                    int elementInFile,
@@ -426,13 +657,19 @@ public class VTUViewer implements java.io.Serializable {
             @ParamGroupInfo(group = "Plot")
             @ParamInfo(name = "Range",
             style = "selection",
-            options = "value=[\"" 
-                    + VTUViewer.Range.AUTO + "\",\"" 
-                    + VTUViewer.Range.MIN_MAX + "\"]") final String sRange,
+            options = "value=[\""
+            + VTUViewer.Range.AUTO + "\",\""
+            + VTUViewer.Range.MIN_MAX + "\"]") final String sRange,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Min", style = "default", options = "value=0") double minValueRange,
+            @ParamInfo(name = "Min",
+            style = "default",
+            options = "value=0",
+            nullIsValid = true) double minValueRange,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Max", style = "default", options = "value=1") double maxValueRange,
+            @ParamInfo(name = "Max",
+            style = "default",
+            options = "value=1",
+            nullIsValid = true) double maxValueRange,
             //            @ParamGroupInfo(group = "Plot")
             //            @ParamInfo(name = "Show Data Legend", style = "default", options = "value=true; invokeOnChange=true") 
             //                    boolean bShowLegend,
@@ -451,50 +688,35 @@ public class VTUViewer implements java.io.Serializable {
             @ParamGroupInfo(group = "Filters|false|Choose which filter should be used.")
             @ParamInfo(name = "Display Style", style = "selection",
             options = "value=[\""
-                    + VTUViewer.DisplayStyle.SURFACE + "\",\""
+            + VTUViewer.DisplayStyle.SURFACE + "\",\""
             + VTUViewer.DisplayStyle.SURFACE_EDGE + "\",\""
             + VTUViewer.DisplayStyle.WIREFRAME + "\",\""
             + VTUViewer.DisplayStyle.POINTS + "\",\""
-            + VTUViewer.DisplayStyle.VECTORFIELD + "\"]") String sDisplayStyle,
+            + VTUViewer.DisplayStyle.VECTORFIELD + "\"]") final String sDisplayStyle,
             @ParamGroupInfo(group = "Filters")
             @ParamInfo(name = "Data Filter", style = "selection",
             options = "value=[\""
-                    + VTUViewer.DataStyle.NONE + "\",\""
+            + VTUViewer.DataStyle.NONE + "\",\""
             + VTUViewer.DataStyle.WARP_AUTO + "\",\""
             + VTUViewer.DataStyle.WARP_FACTOR + "\",\""
-            + VTUViewer.DataStyle.CONTOUR + "\"]") String sDataStyle,
+            + VTUViewer.DataStyle.CONTOUR + "\"]") final String sDataStyle,
             @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Warp Factor", style = "default", options = "value=1") double warpFactor,
+            @ParamInfo(name = "Warp Factor",
+            style = "default",
+            options = "value=1",
+            nullIsValid = true) double warpFactor,
             @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Num Contour", style = "default", options = "value=5") int numContours,
+            @ParamInfo(name = "Num Contour",
+            style = "default",
+            options = "value=5",
+            nullIsValid = true) int numContours,
             @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "scale factor", style = "default", options = "value=0.05") double scaleFactor) {
+            @ParamInfo(name = "Vector Field Scale Factor",
+            style = "default",
+            options = "value=0.05",
+            nullIsValid = true) double fieldScaleFactor) {
 
         mRep = mReq.getMethod();
-
-//        // START setting some parameters visable or not depending on others
-//
-//        ActionListener sRangeListener = new ActionListener() {
-//            public void actionPerformed(ActionEvent ae) {
-//
-//                if (sRange.equals("Auto")) {
-//                }
-//            }
-//        };
-//
-//
-//        Runnable showHideParametersRun = new Runnable() {
-//            public void run() {
-//                // TODO
-//                // add ACTIONLISTENERS 
-//            }
-//        };
-//
-//        Thread showHideParameters = new Thread(showHideParametersRun);
-//
-//
-//        // END setting some parameters visable or not depending on others
-
 
 
 //        // read input
@@ -594,8 +816,8 @@ public class VTUViewer implements java.io.Serializable {
             ////////////////////////////////////
             // create warped data visualization
             ////////////////////////////////////
-            if (sDataStyle.equals(DataStyle.WARP_AUTO) || 
-                    sDataStyle.equals(DataStyle.WARP_FACTOR)) {
+            if (sDataStyle.equals(DataStyle.WARP_AUTO)
+                    || sDataStyle.equals(DataStyle.WARP_FACTOR)) {
 
                 createWarpDataVisualization(ug, sDataStyle, warpFactor,
                         defaultLookupTable, sDisplayStyle, visualization, elementInFile);
@@ -616,7 +838,7 @@ public class VTUViewer implements java.io.Serializable {
             if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
 
                 createVectorFieldFilter(defaultLookupTable, ug,
-                        startsWith, elementInFile, scaleFactor,
+                        startsWith, elementInFile, fieldScaleFactor,
                         sDisplayStyle, visualization);
             }
 
