@@ -721,7 +721,7 @@ public class VTUViewer implements java.io.Serializable {
             nullIsValid = true) double fieldScaleFactor) {
 
         mRep = mReq.getMethod();
-
+        
 
 //        // read input
 //        if (bUseInternFilename) {
