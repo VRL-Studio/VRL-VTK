@@ -441,26 +441,26 @@ public class VTUViewer implements java.io.Serializable {
 
 //                    LoadObserveFileType tRep1 = (LoadObserveFileType) mRep.getParameter(1);
 //                    File folder = tRep1.getFileManager().getLatestFileOrFolder();
-                        
-                        System.out.println(" - - fileOrFolderListener: " + folder.getName());
 
-                        TypeRepresentationBase tRep = mRep.getParameter(2);
+                    System.out.println(" - - fileOrFolderListener: " + folder.getName());
 
-                        if (folder.isDirectory()) {
+                    TypeRepresentationBase tRep = mRep.getParameter(2);
 
-                            System.out.println(" - - folder.isDirectory() = " + folder.isDirectory());
+                    if (folder.isDirectory()) {
 
-                            tRep.setVisible(true);
-                            tRep.getConnector().setVisible(true);
+                        System.out.println(" - - folder.isDirectory() = " + folder.isDirectory());
 
-                        } else if (folder.isFile()) {
+                        tRep.setVisible(true);
+                        tRep.getConnector().setVisible(true);
 
-                            System.out.println(" - - folder.isFile() = " + folder.isFile());
+                    } else if (folder.isFile()) {
 
-                            tRep.setVisible(false);
-                            tRep.getConnector().setVisible(false);
-                        }
-                    
+                        System.out.println(" - - folder.isFile() = " + folder.isFile());
+
+                        tRep.setVisible(false);
+                        tRep.getConnector().setVisible(false);
+                    }
+
                 }
             }
         };
@@ -578,8 +578,12 @@ public class VTUViewer implements java.io.Serializable {
 
                     String sDisplayStyle = (String) mRep.getParameter(13).getViewValueWithoutValidation();
 
-                    System.out.println(" - - fieldScaleListener: " + sDisplayStyle);
-
+                    // START for DEBUG only
+                    String sDataStyle = (String) mRep.getParameter(14).getViewValueWithoutValidation();
+                    System.out.println(" - - fieldScaleListener: Styles: Display = "
+                            + sDisplayStyle + " , Data = "+sDataStyle);
+                    // END for DEBUG only
+                    
                     TypeRepresentationBase tRep = mRep.getParameter(17);
 
                     if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
@@ -597,7 +601,7 @@ public class VTUViewer implements java.io.Serializable {
             }
         };
 
-        System.out.println(" - - mRep.getParameter(13) = " + mRep.getParameter(13));
+//        System.out.println(" - - mRep.getParameter(13) = " + mRep.getParameter(13));
 
         mRep.getParameter(13).getActionListeners().add(fieldScaleListener);
         mRep.getParameter(14).getActionListeners().add(contourListener);
@@ -808,10 +812,31 @@ public class VTUViewer implements java.io.Serializable {
             ////////////////////////////////////
             // create plain data visualization
             ////////////////////////////////////
+
+            System.out.println(" - - before if (sDataStyle.equals(DataStyle.NONE)) ");
+            
             if (sDataStyle.equals(DataStyle.NONE)) {
-                createPlainDataVisualization(
-                        defaultLookupTable, ug,
-                        sDisplayStyle, visualization);
+                
+                System.out.println(" - - DataStyle.NONE ");
+
+                // TODO FIX THIS WORKAROUND if() else()
+                // if DataStyle.NONE and DisplayStyle.VECTORFIELD are chosen
+                // there is a plain visualized too much
+                if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
+
+                    System.out.println(" - - DataStyle.NONE "
+                            + " && DisplayStyle.VECTORFIELD WORKAROUND");
+                    
+                    createContourFilter(
+                            defaultLookupTable, ug, 0,
+                            sDisplayStyle, visualization);
+                    
+                } else {
+                    
+                    createPlainDataVisualization(
+                            defaultLookupTable, ug,
+                            sDisplayStyle, visualization);
+                }
             }
             ////////////////////////////////////
             // create warped data visualization
