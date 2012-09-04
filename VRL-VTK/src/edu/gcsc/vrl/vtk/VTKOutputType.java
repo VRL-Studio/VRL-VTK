@@ -34,19 +34,19 @@ import vtk.*;
 @TypeInfo(type = Visualization.class, input = false, output = true, style = "default")
 public class VTKOutputType extends TypeRepresentationBase {
 
-    private Visualization viewValue;
-//    private VTKView view;
-    private VTKCanvas3D view;
-//    private JFrame frame;
-    private static int NUMBER_OF_INSTANCES;
-    private static int MAX_NUMBER_OF_INSTANCES = 16;
+    protected Visualization viewValue;
+//    protected VTKView view;
+    protected VTKCanvas3D view;
+//    protected JFrame frame;
+    protected static int NUMBER_OF_INSTANCES;
+    protected static int MAX_NUMBER_OF_INSTANCES = 16;
     public static final String POSITION_KEY = "position";
     public static final String FOCAL_POINT_KEY = "focal-point";
     public static final String ROLL_KEY = "roll";
-    private vtkScalarBarActor scalarBar;
-    private vtkScalarBarWidget scalarBarWidget;
-    private vtkTextWidget titleWidget;
-    private vtkOrientationMarkerWidget axesWidget;
+    protected vtkScalarBarActor scalarBar;
+    protected vtkScalarBarWidget scalarBarWidget;
+    protected vtkTextWidget titleWidget;
+    protected vtkOrientationMarkerWidget axesWidget;
 
     public VTKOutputType() {
 
@@ -62,7 +62,6 @@ public class VTKOutputType extends TypeRepresentationBase {
         }
 
         VSwingUtil.invokeAndWait(new Runnable() {
-
             @Override
             public void run() {
                 initialize();
@@ -70,7 +69,7 @@ public class VTKOutputType extends TypeRepresentationBase {
         });
     }
 
-    private void initialize() {
+    protected void initialize() {
 
         view = new VTKCanvas3D(this);
 
@@ -98,7 +97,7 @@ public class VTKOutputType extends TypeRepresentationBase {
         addMenu();
     }
 
-    private void addAxes() {
+    protected void addAxes() {
 
         vtkAxesActor axesActor = new vtkAxesActor();
         axesActor.SetShaftTypeToCylinder();
@@ -124,7 +123,7 @@ public class VTKOutputType extends TypeRepresentationBase {
         view.getPanel().unlock();
     }
 
-    private void addScalarBar() {
+    protected void addScalarBar() {
         scalarBar = new vtkScalarBarActor();
         scalarBar.SetNumberOfLabels(4);
 
@@ -147,7 +146,7 @@ public class VTKOutputType extends TypeRepresentationBase {
         scalarBarWidget.SetEnabled(0);
     }
 
-    private void addTitle(String title) {
+    protected void addTitle(String title) {
         vtkTextActor textActor = new vtkTextActor();
         textActor.SetInput(title);
 
@@ -172,40 +171,9 @@ public class VTKOutputType extends TypeRepresentationBase {
         titleWidget.SetEnabled(1);
     }
 
-    private void saveImage() {
-        FileDialogManager dialogManager = new FileDialogManager();
-
-        class DummySaver implements FileSaver {
-
-            File imgFile;
-
-            public void saveFile(Object o, File file, String ext) throws IOException {
-                this.imgFile = file;
-            }
-
-            public String getDefaultExtension() {
-                return "png";
-            }
-        }
-
-        class PNGFilter extends FileFilter {
-
-            @Override
-            public boolean accept(File f) {
-                return f.getName().toLowerCase().endsWith(".png")
-                        || f.isDirectory();
-            }
-
-            @Override
-            public String getDescription() {
-                return "Image Files (png)";
-            }
-        }
-
-        DummySaver imgSaver = new DummySaver();
-        dialogManager.saveFile(this, new Object(), imgSaver, new PNGFilter());
-
-        if (imgSaver.imgFile != null) {
+    public void saveImage(File file) {
+        
+        if (file != null) {
             view.getPanel().lock();
 
             vtkWindowToImageFilter w2if = new vtkWindowToImageFilter();
@@ -216,17 +184,25 @@ public class VTKOutputType extends TypeRepresentationBase {
 
             vtkPNGWriter writer = new vtkPNGWriter();
             writer.SetInput(w2if.GetOutput());
-            writer.SetFileName(imgSaver.imgFile.getAbsolutePath());
+            writer.SetFileName(file.getAbsolutePath());
             writer.Write();
 
             view.getPanel().unlock();
-        }
+        }   
+    }
+    
+    protected void saveImage() {
+        FileDialogManager dialogManager = new FileDialogManager();
+
+        DummySaver imgSaver = new DummySaver();
+        dialogManager.saveFile(this, new Object(), imgSaver, new PNGFilter());
+
+        saveImage(imgSaver.imgFile);
     }
 
-    private void addMenu() {
+    protected void addMenu() {
         JMenuItem resetItem = new JMenuItem("Reset View");
         resetItem.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 view.resetCamera();
             }
@@ -236,7 +212,6 @@ public class VTKOutputType extends TypeRepresentationBase {
 
         JMenuItem imgItem = new JMenuItem("Save Image");
         imgItem.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 saveImage();
             }
@@ -263,7 +238,6 @@ public class VTKOutputType extends TypeRepresentationBase {
         view.getMenu().add(toggleProjectionItem);
 
         view.addMouseListener(new MouseAdapter() {
-
             @Override
             public void mouseClicked(MouseEvent e) {
 
@@ -278,7 +252,6 @@ public class VTKOutputType extends TypeRepresentationBase {
     public void setViewValue(final Object o) {
 
         VSwingUtil.invokeAndWait(new Runnable() {
-
             public void run() {
 
                 // check if type is correct
@@ -341,7 +314,6 @@ public class VTKOutputType extends TypeRepresentationBase {
         super.emptyView();
 
         VSwingUtil.invokeLater(new Runnable() {
-
             @Override
             public void run() {
                 if (viewValue != null) {
@@ -366,7 +338,7 @@ public class VTKOutputType extends TypeRepresentationBase {
      *
      * @param script the script to evaluate
      */
-    private void setVCanvas3DSizeFromValueOptions(Script script) {
+    protected void setVCanvas3DSizeFromValueOptions(Script script) {
         Integer w = null;
         Integer h = null;
         Object property = null;
@@ -454,6 +426,41 @@ public class VTKOutputType extends TypeRepresentationBase {
             view.dispose();
             view = null;
             NUMBER_OF_INSTANCES--;
+        }
+    }
+
+    class DummySaver implements FileSaver {
+
+        File imgFile;
+
+        public DummySaver() {
+        }
+
+        public DummySaver(File imgFile) {
+            
+            this.imgFile = imgFile;
+        }
+
+        public void saveFile(Object o, File file, String ext) throws IOException {
+            this.imgFile = file;
+        }
+
+        public String getDefaultExtension() {
+            return "png";
+        }
+    }
+
+    class PNGFilter extends FileFilter {
+
+        @Override
+        public boolean accept(File f) {
+            return f.getName().toLowerCase().endsWith(".png")
+                    || f.isDirectory();
+        }
+
+        @Override
+        public String getDescription() {
+            return "Image Files (png)";
         }
     }
 }
