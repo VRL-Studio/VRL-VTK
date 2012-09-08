@@ -439,6 +439,9 @@ public class VTUViewer implements java.io.Serializable {
 
                     File folder = (File) mRep.getParameter(1).getViewValueWithoutValidation();
 
+                    // if folder does not exist, do nothing
+                    if(folder == null) return;
+                    
 //                    LoadObserveFileType tRep1 = (LoadObserveFileType) mRep.getParameter(1);
 //                    File folder = tRep1.getFileManager().getLatestFileOrFolder();
 
