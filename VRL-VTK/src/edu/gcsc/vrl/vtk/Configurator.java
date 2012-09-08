@@ -45,12 +45,12 @@ public class Configurator extends VPluginConfigurator {
     public void register(PluginAPI api) {
         VPluginAPI vapi = (VPluginAPI) api;
 
-        vapi.addComponent(GridPainter3D.class);
-        vapi.addComponent(VTKViewer.class);
+        vapi.addComponent(GridPainter3D.class); // VTU-Viewer (Legacy)
+        //vapi.addComponent(VTKViewer.class);
         vapi.addComponent(VTKSampleComponent.class);
         vapi.addComponent(VTUViewer.class);
-        vapi.addComponent(VTUViewer_Glyph.class);
-        vapi.addComponent(VectorFieldExample.class);
+        //vapi.addComponent(VTUViewer_Glyph.class);
+        //vapi.addComponent(VectorFieldExample.class);
 
         vapi.addTypeRepresentation(VTKOutputType.class);
 
