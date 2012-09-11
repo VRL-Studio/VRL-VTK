@@ -177,17 +177,13 @@ public class VTUViewer implements java.io.Serializable {
     @MethodInfo(hide = false, hideCloseIcon = true, valueStyle = "multi-out")
     public Object[] visualize(
             MethodRequest mReq,
-            @ParamGroupInfo(group = "Files|false|File depending data.")
+            @ParamGroupInfo(group = "Files|true|File depending data.")
             @ParamInfo(name = "Folder or File",
             style = "observe-load-dialog",
             options = "tag=\"element\"") final File fileOrFolder,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "File Beginning",
             nullIsValid = true) final String startsWith,
-            @ParamGroupInfo(group = "Files")
-            @ParamInfo(name = "Data Component",
-            style = "observe-load-dialog",
-            options = "fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") final String elemInFile,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "Produce PNG", options = "value=false")
             final boolean makePNG) {
@@ -226,7 +222,7 @@ public class VTUViewer implements java.io.Serializable {
                 try {
                     boolean filesAnalysed = false;
                     int waitingTime = 100;
-                    String elementInFile = elemInFile;
+                    String elementInFile = plotSetup.elementInFile;
                     int index = 0;
 
                     while (true) {
@@ -341,14 +337,14 @@ public class VTUViewer implements java.io.Serializable {
         return new Object[]{lastVisualization, outFile};
     }
 
-    @MethodInfo(hide = false, hideCloseIcon = true)
+    @MethodInfo(hide = false, hideCloseIcon = true, interactive=false)
     public void setup(
             MethodRequest mReq,
             @ParamGroupInfo(group = "Data")
             @ParamInfo(name = "Data Component",
             style = "observe-load-dialog",
             options = "invokeOnChange=true; fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") 
-            final String elemInFile,
+            final String elementInFile,
             @ParamGroupInfo(group = "Data")
             @ParamInfo(name = "Frame Duration (in ms)", options = "invokeOnChange=true; value=0")
             final long wait,
@@ -420,6 +416,7 @@ public class VTUViewer implements java.io.Serializable {
                 bShowLegend, bShowOutline, showOrientation,
                 sDataStyle, sDisplayStyle,
                 warpFactor, numContours, fieldScaleFactor, wait);
+        this.plotSetup.elementInFile = elementInFile;
 
     }
 
@@ -833,7 +830,7 @@ public class VTUViewer implements java.io.Serializable {
 
         final DefaultMethodRepresentation mVisualizeRep = vObj.getObjectRepresentation().
                 getMethodBySignature("visualize", MethodRequest.class,
-                File.class, String.class, String.class,
+                File.class, String.class,
                 boolean.class);
 
         final DefaultMethodRepresentation mSetupRep = vObj.getObjectRepresentation().
