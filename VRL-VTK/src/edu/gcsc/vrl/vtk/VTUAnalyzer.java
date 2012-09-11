@@ -20,8 +20,6 @@ class VTUAnalyzer implements FileAnalyzer {
 
     private String ending = "vtu";
     private String startsWith = "";
-    private List<String> fileEntries = new ArrayList<String>();
-    private File lastFile = null;
 
     public VTUAnalyzer() {
     }
@@ -34,16 +32,16 @@ class VTUAnalyzer implements FileAnalyzer {
      *
      * @return the
      */
-    public void analyzeFile(File file) {
+    public List<String> analyzeFile(File file) {
         //delete previous entries resp. new list
-        fileEntries = new ArrayList<String>();
+        List<String> fileEntries = new ArrayList<String>();
 
         ArrayList<File> files = getAllFilesInFolder(file, getStartsWith());
 
         if (files != null && !files.isEmpty()) {
-            
-            lastFile = files.get(0);
-            
+
+            File lastFile = files.get(0);
+
             final String fileName = lastFile.getAbsolutePath();
 
             vtkXMLUnstructuredGridReader reader = new vtkXMLUnstructuredGridReader();
@@ -60,10 +58,11 @@ class VTUAnalyzer implements FileAnalyzer {
 
             System.out.println("ELEMENTS/ARRAYS IN FILE:");
             for (int i = 0; i < numVisCompData; i++) {
-                getFileEntries().add(ug.GetPointData().GetArrayName(i));
+                fileEntries.add(ug.GetPointData().GetArrayName(i));
             }
-
         }
+
+        return fileEntries;
     }
 
     private ArrayList<File> getAllFilesInFolder(File dir, final String startsWith) {
@@ -71,10 +70,11 @@ class VTUAnalyzer implements FileAnalyzer {
         ArrayList<File> result = new ArrayList<File>();
 
         if (dir != null && dir.isDirectory()) {
-            
-            System.out.println(getClass().getSimpleName()+" getAllFilesInFolder() DIR");
-            
+
+            System.out.println(getClass().getSimpleName() + " getAllFilesInFolder() DIR");
+
             for (File f : dir.listFiles(new FileFilter() {
+
                 @Override
                 public boolean accept(File pathName) {
                     boolean fileAccept = pathName.getName().toLowerCase().endsWith("." + ending) || pathName.isDirectory();
@@ -84,7 +84,7 @@ class VTUAnalyzer implements FileAnalyzer {
 
                     String fileName = pathName.getPath().substring(sep + 1, dot);
 
-                    boolean nameAccept = startsWith == "" || fileName.startsWith(startsWith);
+                    boolean nameAccept = startsWith.equals("") || fileName.startsWith(startsWith+"_");
 
                     return fileAccept && nameAccept;
                 }
@@ -95,15 +95,9 @@ class VTUAnalyzer implements FileAnalyzer {
             }
 
         } else if (dir != null && dir.isFile()) {
-            System.out.println(getClass().getSimpleName()+" getAllFilesInFolder() FILE");
-                    result.add(dir);
-                } 
-        
-        else {
-            //
-            throw new RuntimeException("Viewer: name = '" + dir.getName() + "' not found."+
-                    "\npath = "+ dir.getAbsolutePath());
-        }
+            System.out.println(getClass().getSimpleName() + " getAllFilesInFolder() FILE");
+            result.add(dir);
+        } 
 
         return result;
     }
@@ -120,16 +114,5 @@ class VTUAnalyzer implements FileAnalyzer {
      */
     public void setStartsWith(String startsWith) {
         this.startsWith = startsWith;
-    }
-
-    /**
-     * @return the fileEntries
-     */
-    public List<String> getFileEntries() {
-        return fileEntries;
-    }
-
-    public File getLastFile() {
-        return lastFile;
     }
 }

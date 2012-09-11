@@ -28,6 +28,7 @@ import java.awt.event.FocusListener;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vtk.vtkActor;
@@ -138,7 +139,7 @@ public class VTUViewer implements java.io.Serializable {
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "Data Component",
             style = "observe-load-dialog",
-            options = "fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") final String elementInFile,
+            options = "fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") final String elemInFile,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "Produce PNG", options = "value=false")
             final boolean makePNG,
@@ -211,13 +212,6 @@ public class VTUViewer implements java.io.Serializable {
         final int windowID = 0;
         final String tag = "element";
 
-        if (!fileOrFolder.getAbsolutePath().isEmpty() && fileOrFolder.exists()) {
-            LoadFileObservable.getInstance().setSelectedFile(
-                    fileOrFolder, analyzer, tag, o, windowID);
-        } else {
-            LoadFileObservable.getInstance().setInvalidFile(tag, o, windowID);
-        }
-
         lastVisualization = new Visualization();
 
         // stop current thread iff running
@@ -240,7 +234,10 @@ public class VTUViewer implements java.io.Serializable {
                 System.out.println(" - - Start Thread");
                 try {
                     boolean filesAnalysed = false;
-
+                    int waitingTime = 100;
+                    String elementInFile = elemInFile;
+                    int index = 0;
+                    
                     while (true) {
 
                         ArrayList<File> allFiles = getAllFilesInFolder(fileOrFolder, startsWith, "vtu");
@@ -248,20 +245,31 @@ public class VTUViewer implements java.io.Serializable {
                         // if nothing changed, wait 1s before next lookup
                         if (lastAllFiles.equals(allFiles)) {
                             System.out.println("WAIT BEFORE FILELOOP BEGIN");
-                            Thread.sleep(1000);
+                            Thread.sleep(waitingTime);
                             System.out.println("WAIT BEFORE FILELOOP END");
                         }
 
                         if (!filesAnalysed && !allFiles.isEmpty()) {
                             System.out.println(" ***** ANALYSE FILE ***** ");
-                            analyzer.analyzeFile(allFiles.get(0));
-                            if (!fileOrFolder.getAbsolutePath().isEmpty() && fileOrFolder.exists()) {
+                            File file = allFiles.get(0);
+                            if (!file.getAbsolutePath().isEmpty() && file.exists()) {
                                 LoadFileObservable.getInstance().setSelectedFile(
-                                        fileOrFolder, analyzer, tag, o, windowID);
+                                        file, tag, o, windowID);
+
+                                if (elementInFile.equals("")) {
+                                    ArrayList<String> list = new ArrayList<String>();
+                                    list.addAll(analyzer.analyzeFile(file));
+                                    if (!list.isEmpty()) {
+                                        elementInFile = list.get(0);
+                                        index = list.indexOf(elementInFile);
+                                    }
+                                }
                             } else {
                                 LoadFileObservable.getInstance().setInvalidFile(tag, o, windowID);
                             }
+
                             filesAnalysed = true;
+                            waitingTime = 1000;
                         }
 
                         System.out.println(" - - Loop Files in Thread");
@@ -280,15 +288,11 @@ public class VTUViewer implements java.io.Serializable {
                             visualization.setOrientationVisible(showOrientation);
 
                             if (title.isEmpty()) {
-//                visualization.setTitle(file.getName());
                             } else {
                                 visualization.setTitle(title);
                             }
-
-                            VTypeObserveUtil.getFileAnanlyzerByClass(VTUAnalyzer.class).analyzeFile(file);
-
+                        
                             final String fileName = file.getAbsolutePath();//getAbsoluteFile();
-//            System.out.println("-- fileName = "+ fileName);
 
                             vtkXMLUnstructuredGridReader reader = new vtkXMLUnstructuredGridReader();
                             reader.SetFileName(fileName);
@@ -347,7 +351,7 @@ public class VTUViewer implements java.io.Serializable {
                             if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
 
                                 createVectorFieldFilter(defaultLookupTable, ug,
-                                        startsWith, elementInFile, fieldScaleFactor,
+                                        startsWith, elementInFile, index, fieldScaleFactor,
                                         sDisplayStyle, visualization);
                             }
 
@@ -584,50 +588,41 @@ public class VTUViewer implements java.io.Serializable {
      */
     private void createVectorFieldFilter(vtkLookupTable defaultLookupTable,
             vtkUnstructuredGrid ug, String startsWith,
-            String elementInFile, double scaleFactor,
+            String elementInFile, int index, double scaleFactor,
             String sDisplayStyle, final Visualization visualization) {
 
         vtkLookupTable vectorfieldTable = new vtkLookupTable();
         vectorfieldTable.DeepCopy(defaultLookupTable);
 
         // represent vector field
-        vtkGlyph3D vectorGlyph = new vtkGlyph3D();
         vtkArrowSource arrowSource = new vtkArrowSource();
 
+        vtkGlyph3D vectorGlyph = new vtkGlyph3D();
         vectorGlyph.SetInput(ug);
         vectorGlyph.SetSourceConnection(arrowSource.GetOutputPort());
-
         vectorGlyph.SetScaleModeToScaleByVector();
         vectorGlyph.SetVectorModeToUseVector();
         vectorGlyph.ScalingOn();
         vectorGlyph.OrientOn();
         vectorGlyph.SetColorModeToColorByVector();//color the glyphs
         vectorGlyph.SetScaleFactor(scaleFactor);
-
-        VTUAnalyzer analyzer = (VTUAnalyzer) VTypeObserveUtil.getFileAnanlyzerByName(VTUAnalyzer.class.getSimpleName());
-        analyzer.setStartsWith(startsWith);
-        int index = analyzer.getFileEntries().indexOf(elementInFile);
-
-        vectorGlyph.SetInputArrayToProcess(
-                index,
-                ug.GetInformation());
-
+        vectorGlyph.SetInputArrayToProcess(index, ug.GetInformation());
         vectorGlyph.Update();
-        vtkPolyDataMapper vectorGlyphMapper = new vtkPolyDataMapper();
 
+
+        vtkPolyDataMapper vectorGlyphMapper = new vtkPolyDataMapper();
         vectorGlyphMapper.SetInput(vectorGlyph.GetOutput());
 
         settingsForMappers(sDisplayStyle, vectorGlyphMapper, vectorfieldTable);
-        vtkActor vectorActor = new vtkActor();
 
-        vectorActor.SetMapper(vectorGlyphMapper);
         //optional setttings for lightning
         vtkProperty sliceProp = new vtkProperty();
-
         sliceProp.SetDiffuse(0.0);
         sliceProp.SetSpecular(0.0);
         sliceProp.SetAmbient(1.0);
 
+        vtkActor vectorActor = new vtkActor();
+        vectorActor.SetMapper(vectorGlyphMapper);
         vectorActor.SetProperty(sliceProp);
 
         setDisplayStyle(vectorActor, sDisplayStyle);
@@ -798,7 +793,7 @@ public class VTUViewer implements java.io.Serializable {
 
                     String fileName = pathName.getPath().substring(sep + 1, dot);
 
-                    boolean nameAccept = startsWith.equals("") || fileName.startsWith(startsWith);
+                    boolean nameAccept = startsWith.equals("") || fileName.startsWith(startsWith + "_");
 
                     return fileAccept && nameAccept;
                 }
