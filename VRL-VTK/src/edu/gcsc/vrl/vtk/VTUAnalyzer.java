@@ -40,7 +40,7 @@ class VTUAnalyzer implements FileAnalyzer {
 
         ArrayList<File> files = getAllFilesInFolder(file, getStartsWith());
 
-        if (files != null) {
+        if (files != null && !files.isEmpty()) {
             
             lastFile = files.get(0);
             
