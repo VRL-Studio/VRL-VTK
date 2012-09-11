@@ -347,65 +347,72 @@ public class VTUViewer implements java.io.Serializable {
             @ParamGroupInfo(group = "Data")
             @ParamInfo(name = "Data Component",
             style = "observe-load-dialog",
-            options = "fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") final String elemInFile,
+            options = "invokeOnChange=true; fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") 
+            final String elemInFile,
             @ParamGroupInfo(group = "Data")
-            @ParamInfo(name = "Frame Duration (in ms)", options = "value=0")
+            @ParamInfo(name = "Frame Duration (in ms)", options = "invokeOnChange=true; value=0")
             final long wait,
             //
             @ParamGroupInfo(group = "Plot|false|Plot depending data.")
-            @ParamInfo(name = "Title", style = "default") final String title,
+            @ParamInfo(name = "Title", style = "default", options="invokeOnChange=true") 
+            final String title,
             @ParamGroupInfo(group = "Plot")
             @ParamInfo(name = "Range",
             style = "selection",
-            options = "value=[\""
+            options = "invokeOnChange=true; value=[\""
             + VTUViewer.Range.AUTO + "\",\""
             + VTUViewer.Range.MIN_MAX + "\"]") final String sRange,
             @ParamGroupInfo(group = "Plot")
             @ParamInfo(name = "Min",
             style = "default",
-            options = "value=0",
+            options = "invokeOnChange=true; value=0",
             nullIsValid = true) final double minValueRange,
             @ParamGroupInfo(group = "Plot")
             @ParamInfo(name = "Max",
             style = "default",
-            options = "value=1",
+            options = "invokeOnChange=true; value=1",
             nullIsValid = true) final double maxValueRange,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Show Data Legend", style = "default", options = "value=true") final boolean bShowLegend,
+            @ParamInfo(name = "Show Data Legend", style = "default", options = "invokeOnChange=true; value=true") 
+            final boolean bShowLegend,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Show Outline", style = "default", options = "value=false") final boolean bShowOutline,
+            @ParamInfo(name = "Show Outline", style = "default", options = "invokeOnChange=true; value=false") 
+            final boolean bShowOutline,
             @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Show Orientation", style = "default") final boolean showOrientation,
+            @ParamInfo(name = "Show Orientation", style = "default", options="invokeOnChange=true") 
+            final boolean showOrientation,
             //
             @ParamGroupInfo(group = "Filters|false|Choose which filter should be used.")
             @ParamInfo(name = "Display Style", style = "selection",
-            options = "value=[\""
+            options = "invokeOnChange=true; value=[\""
             + VTUViewer.DisplayStyle.SURFACE + "\",\""
             + VTUViewer.DisplayStyle.SURFACE_EDGE + "\",\""
             + VTUViewer.DisplayStyle.WIREFRAME + "\",\""
             + VTUViewer.DisplayStyle.POINTS + "\",\""
-            + VTUViewer.DisplayStyle.VECTORFIELD + "\"]") final String sDisplayStyle,
+            + VTUViewer.DisplayStyle.VECTORFIELD + "\"]") 
+            final String sDisplayStyle,
             @ParamGroupInfo(group = "Filters")
             @ParamInfo(name = "Data Filter", style = "selection",
-            options = "value=[\""
+            options = "invokeOnChange=true; value=[\""
             + VTUViewer.DataStyle.NONE + "\",\""
             + VTUViewer.DataStyle.WARP_AUTO + "\",\""
             + VTUViewer.DataStyle.WARP_FACTOR + "\",\""
-            + VTUViewer.DataStyle.CONTOUR + "\"]") final String sDataStyle,
+            + VTUViewer.DataStyle.CONTOUR + "\"]") 
+            final String sDataStyle,
             @ParamGroupInfo(group = "Filters")
             @ParamInfo(name = "Warp Factor",
             style = "default",
-            options = "value=1",
+            options = "invokeOnChange=true; value=1",
             nullIsValid = true) final double warpFactor,
             @ParamGroupInfo(group = "Filters")
             @ParamInfo(name = "Num Contour",
             style = "default",
-            options = "value=5",
+            options = "invokeOnChange=true; value=5",
             nullIsValid = true) final int numContours,
             @ParamGroupInfo(group = "Filters")
             @ParamInfo(name = "Vector Field Scale Factor",
             style = "default",
-            options = "value=0.05",
+            options = "invokeOnChange=true; value=0.05",
             nullIsValid = true) final double fieldScaleFactor) {
 
         this.plotSetup = new PlotSetup(title,
@@ -827,7 +834,7 @@ public class VTUViewer implements java.io.Serializable {
         final DefaultMethodRepresentation mVisualizeRep = vObj.getObjectRepresentation().
                 getMethodBySignature("visualize", MethodRequest.class,
                 File.class, String.class, String.class,
-                boolean.class, long.class);
+                boolean.class);
 
         final DefaultMethodRepresentation mSetupRep = vObj.getObjectRepresentation().
                 getMethodBySignature("setup", MethodRequest.class,
