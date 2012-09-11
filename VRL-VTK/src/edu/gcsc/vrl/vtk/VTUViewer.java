@@ -115,6 +115,61 @@ public class VTUViewer implements java.io.Serializable {
         }
     }
 
+    final protected class PlotSetup {
+
+        public PlotSetup(String title, String sRange,
+                double minValueRange, double maxValueRange,
+                boolean bShowLegend, boolean bShowOutline, boolean showOrientation,
+                String sDataStyle, String sDisplayStyle,
+                double warpFactor, int numContours, double fieldScaleFactor,
+                String elementInFile, int index, String startsWith) {
+            this.title = title;
+            //
+            this.sRange = sRange;
+            this.minValueRange = minValueRange;
+            this.maxValueRange = maxValueRange;
+            //
+            this.bShowLegend = bShowLegend;
+            this.bShowOutline = bShowOutline;
+            this.showOrientation = showOrientation;
+            //
+            this.sDataStyle = sDataStyle;
+            this.sDisplayStyle = sDisplayStyle;
+            //
+            this.warpFactor = warpFactor;
+            this.numContours = numContours;
+            this.fieldScaleFactor = fieldScaleFactor;
+            //
+            this.elementInFile = elementInFile;
+            this.index = index;
+            this.startsWith = startsWith;
+        }
+
+        public PlotSetup() {
+        }
+        //
+        public String title = "";
+        //
+        public String sRange = VTUViewer.Range.AUTO;
+        public double minValueRange = 0.0;
+        public double maxValueRange = 1.0;
+        //
+        public boolean bShowLegend = true;
+        public boolean bShowOutline = true;
+        public boolean showOrientation = true;
+        //
+        public String sDataStyle = VTUViewer.DataStyle.NONE;
+        public String sDisplayStyle = VTUViewer.DisplayStyle.SURFACE;
+        //
+        public double warpFactor = 1.0;
+        public int numContours = 5;
+        public double fieldScaleFactor = 0.5;
+        //
+        public String elementInFile = "";
+        public int index = 0;
+        public String startsWith = "";
+    }
+
     @OutputInfo(style = "multi-out",
     elemStyles = {"default", "silent"}, elemNames = {"", "File"},
     elemTypes = {Visualization.class, File.class})
@@ -229,7 +284,7 @@ public class VTUViewer implements java.io.Serializable {
                     int waitingTime = 100;
                     String elementInFile = elemInFile;
                     int index = 0;
-                    
+
                     while (true) {
 
                         ArrayList<File> allFiles = getAllFilesInFolder(fileOrFolder, startsWith, "vtu");
@@ -266,6 +321,13 @@ public class VTUViewer implements java.io.Serializable {
 
                         System.out.println(" - - Loop Files in Thread");
 
+                        PlotSetup plotSetup = new PlotSetup(title, 
+                                sRange, minValueRange, maxValueRange, 
+                                bShowLegend, bShowOutline, showOrientation, 
+                                sDataStyle, sDisplayStyle, 
+                                warpFactor, numContours, fieldScaleFactor, 
+                                elementInFile, index, startsWith);
+
                         for (File file : allFiles) {
 
                             if (lastAllFiles.contains(file)) {
@@ -274,101 +336,7 @@ public class VTUViewer implements java.io.Serializable {
 
                             System.out.println(" - - PLOT FILE");
 
-                            // create vis object to add all components
-                            final Visualization visualization = new Visualization();
-
-                            visualization.setOrientationVisible(showOrientation);
-
-                            if (title.isEmpty()) {
-                            } else {
-                                visualization.setTitle(title);
-                            }
-                        
-                            final String fileName = file.getAbsolutePath();//getAbsoluteFile();
-
-                            vtkXMLUnstructuredGridReader reader = new vtkXMLUnstructuredGridReader();
-                            reader.SetFileName(fileName);
-                            reader.Update();
-
-                            vtkUnstructuredGrid ug = reader.GetOutput();
-
-
-                            if (settingScalarsOrVectors(sDisplayStyle, ug, elementInFile) == false) {
-                                continue;
-                            }
-
-                            vtkLookupTable defaultLookupTable = createLookupTable(
-                                    sRange, sDisplayStyle, sDataStyle, ug,
-                                    minValueRange, maxValueRange,
-                                    bShowLegend, visualization, elementInFile);
-
-                            if (sDataStyle.equals(DataStyle.NONE)) {
-
-                                System.out.println(" - - DataStyle.NONE ");
-
-                                // TODO FIX THIS WORKAROUND if() else()
-                                // if DataStyle.NONE and DisplayStyle.VECTORFIELD are chosen
-                                // there is a plain visualized too much
-                                if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
-
-                                    System.out.println(" - - DataStyle.NONE "
-                                            + " && DisplayStyle.VECTORFIELD WORKAROUND");
-
-                                    createContourFilter(
-                                            defaultLookupTable, ug, 0,
-                                            sDisplayStyle, visualization);
-
-                                } else {
-
-                                    createPlainDataVisualization(
-                                            defaultLookupTable, ug,
-                                            sDisplayStyle, visualization);
-                                }
-                            }
-
-                            if (sDataStyle.equals(DataStyle.WARP_AUTO)
-                                    || sDataStyle.equals(DataStyle.WARP_FACTOR)) {
-
-                                createWarpDataVisualization(ug, sDataStyle, warpFactor,
-                                        defaultLookupTable, sDisplayStyle, visualization, elementInFile);
-                            }
-
-
-                            if (sDataStyle.equals(DataStyle.CONTOUR)) {
-
-                                createContourFilter(defaultLookupTable, ug,
-                                        numContours, sDisplayStyle, visualization);
-                            }
-
-                            if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
-
-                                createVectorFieldFilter(defaultLookupTable, ug,
-                                        startsWith, elementInFile, index, fieldScaleFactor,
-                                        sDisplayStyle, visualization);
-                            }
-
-                            if (bShowOutline) {
-
-                                createOutlineFilter(ug, visualization);
-                            }
-
-                            VSwingUtil.invokeAndWait(new Runnable() {
-
-                                public void run() {
-
-                                    VTKOutputType vtkOutput = ((VTKOutputType) (((MultipleOutputType) mRep.getReturnValue()).getTypeContainers().get(0).getTypeRepresentation()));
-                                    vtkOutput.emptyView();
-                                    vtkOutput.setViewValue(visualization);
-
-                                    String[] split = fileName.split(".vtu");
-                                    if (makePNG) {
-                                        File pngFile = new File(split[0] + ".png");
-                                        vtkOutput.saveImage(pngFile);
-                                    }
-                                }
-                            });
-
-                            lastVisualization = visualization;
+                            lastVisualization = createVisualization(file, plotSetup, makePNG);
 
                             try {
                                 System.out.println("WAIT IN FILELOOP BEGIN");
@@ -413,6 +381,104 @@ public class VTUViewer implements java.io.Serializable {
 
         //return lastVisualization;
         return new Object[]{lastVisualization, outFile};
+    }
+
+    protected Visualization createVisualization(File file, PlotSetup plotSetup, final boolean makePNG) {
+
+        final Visualization visualization = new Visualization();
+
+        visualization.setOrientationVisible(plotSetup.showOrientation);
+
+        if (plotSetup.title.isEmpty()) {
+        } else {
+            visualization.setTitle(plotSetup.title);
+        }
+
+        final String fileName = file.getAbsolutePath();//getAbsoluteFile();
+
+        vtkXMLUnstructuredGridReader reader = new vtkXMLUnstructuredGridReader();
+        reader.SetFileName(fileName);
+        reader.Update();
+
+        vtkUnstructuredGrid ug = reader.GetOutput();
+
+
+        if (settingScalarsOrVectors(plotSetup.sDisplayStyle, ug, plotSetup.elementInFile) == false) {
+            return visualization;
+        }
+
+        vtkLookupTable defaultLookupTable = createLookupTable(
+                plotSetup.sRange, plotSetup.sDisplayStyle, plotSetup.sDataStyle, ug,
+                plotSetup.minValueRange, plotSetup.maxValueRange,
+                plotSetup.bShowLegend, visualization, plotSetup.elementInFile);
+
+        if (plotSetup.sDataStyle.equals(DataStyle.NONE)) {
+
+            System.out.println(" - - DataStyle.NONE ");
+
+            // TODO FIX THIS WORKAROUND if() else()
+            // if DataStyle.NONE and DisplayStyle.VECTORFIELD are chosen
+            // there is a plain visualized too much
+            if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
+
+                System.out.println(" - - DataStyle.NONE "
+                        + " && DisplayStyle.VECTORFIELD WORKAROUND");
+
+                createContourFilter(
+                        defaultLookupTable, ug, 0,
+                        plotSetup.sDisplayStyle, visualization);
+
+            } else {
+
+                createPlainDataVisualization(
+                        defaultLookupTable, ug,
+                        plotSetup.sDisplayStyle, visualization);
+            }
+        }
+
+        if (plotSetup.sDataStyle.equals(DataStyle.WARP_AUTO)
+                || plotSetup.sDataStyle.equals(DataStyle.WARP_FACTOR)) {
+
+            createWarpDataVisualization(ug, plotSetup.sDataStyle, plotSetup.warpFactor,
+                    defaultLookupTable, plotSetup.sDisplayStyle, visualization, plotSetup.elementInFile);
+        }
+
+
+        if (plotSetup.sDataStyle.equals(DataStyle.CONTOUR)) {
+
+            createContourFilter(defaultLookupTable, ug,
+                    plotSetup.numContours, plotSetup.sDisplayStyle, visualization);
+        }
+
+        if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
+
+            createVectorFieldFilter(defaultLookupTable, ug,
+                    plotSetup.startsWith, plotSetup.elementInFile, plotSetup.index, plotSetup.fieldScaleFactor,
+                    plotSetup.sDisplayStyle, visualization);
+        }
+
+        if (plotSetup.bShowOutline) {
+
+            createOutlineFilter(ug, visualization);
+        }
+
+        VSwingUtil.invokeAndWait(new Runnable() {
+
+            public void run() {
+
+                VTKOutputType vtkOutput = ((VTKOutputType) (((MultipleOutputType) mRep.getReturnValue()).getTypeContainers().get(0).getTypeRepresentation()));
+                vtkOutput.emptyView();
+                vtkOutput.setViewValue(visualization);
+
+                String[] split = fileName.split(".vtu");
+                if (makePNG) {
+                    File pngFile = new File(split[0] + ".png");
+                    vtkOutput.saveImage(pngFile);
+                }
+            }
+        });
+
+        return visualization;
     }
 
     /**
