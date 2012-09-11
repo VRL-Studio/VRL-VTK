@@ -73,6 +73,7 @@ public class VTUViewer implements java.io.Serializable {
         private static final String CONTOUR = "Contour";
     }
     private transient Visualization lastVisualization = new Visualization();
+    private transient File lastFile = null;
     private transient Thread thread = null;
     private transient ArrayList<File> lastAllFiles = new ArrayList<File>();
     private transient DefaultMethodRepresentation mRep;
@@ -155,15 +156,15 @@ public class VTUViewer implements java.io.Serializable {
         public double maxValueRange = 1.0;
         //
         public boolean bShowLegend = true;
-        public boolean bShowOutline = true;
-        public boolean showOrientation = true;
+        public boolean bShowOutline = false;
+        public boolean showOrientation = false;
         //
-        public String sDataStyle = VTUViewer.DataStyle.NONE;
         public String sDisplayStyle = VTUViewer.DisplayStyle.SURFACE;
+        public String sDataStyle = VTUViewer.DataStyle.NONE;
         //
         public double warpFactor = 1.0;
         public int numContours = 5;
-        public double fieldScaleFactor = 0.5;
+        public double fieldScaleFactor = 0.05;
         //
         public String elementInFile = "";
         public int index = 0;
@@ -321,11 +322,11 @@ public class VTUViewer implements java.io.Serializable {
 
                         System.out.println(" - - Loop Files in Thread");
 
-                        PlotSetup plotSetup = new PlotSetup(title, 
-                                sRange, minValueRange, maxValueRange, 
-                                bShowLegend, bShowOutline, showOrientation, 
-                                sDataStyle, sDisplayStyle, 
-                                warpFactor, numContours, fieldScaleFactor, 
+                        PlotSetup plotSetup = new PlotSetup(title,
+                                sRange, minValueRange, maxValueRange,
+                                bShowLegend, bShowOutline, showOrientation,
+                                sDataStyle, sDisplayStyle,
+                                warpFactor, numContours, fieldScaleFactor,
                                 elementInFile, index, startsWith);
 
                         for (File file : allFiles) {
@@ -336,7 +337,24 @@ public class VTUViewer implements java.io.Serializable {
 
                             System.out.println(" - - PLOT FILE");
 
-                            lastVisualization = createVisualization(file, plotSetup, makePNG);
+                            lastVisualization = createVisualization(file, plotSetup);
+                            lastFile = file;
+
+                            VSwingUtil.invokeAndWait(new Runnable() {
+                            
+                                public void run() {
+
+                                    VTKOutputType vtkOutput = ((VTKOutputType) (((MultipleOutputType) mRep.getReturnValue()).getTypeContainers().get(0).getTypeRepresentation()));
+                                    vtkOutput.emptyView();
+                                    vtkOutput.setViewValue(lastVisualization);
+
+                                    String[] split = lastFile.getAbsolutePath().split(".vtu");
+                                    if (makePNG) {
+                                        File pngFile = new File(split[0] + ".png");
+                                        vtkOutput.saveImage(pngFile);
+                                    }
+                                }
+                            });
 
                             try {
                                 System.out.println("WAIT IN FILELOOP BEGIN");
@@ -383,7 +401,7 @@ public class VTUViewer implements java.io.Serializable {
         return new Object[]{lastVisualization, outFile};
     }
 
-    protected Visualization createVisualization(File file, PlotSetup plotSetup, final boolean makePNG) {
+    static protected Visualization createVisualization(File file, PlotSetup plotSetup) {
 
         final Visualization visualization = new Visualization();
 
@@ -462,37 +480,10 @@ public class VTUViewer implements java.io.Serializable {
             createOutlineFilter(ug, visualization);
         }
 
-        VSwingUtil.invokeAndWait(new Runnable() {
-
-            public void run() {
-
-                VTKOutputType vtkOutput = ((VTKOutputType) (((MultipleOutputType) mRep.getReturnValue()).getTypeContainers().get(0).getTypeRepresentation()));
-                vtkOutput.emptyView();
-                vtkOutput.setViewValue(visualization);
-
-                String[] split = fileName.split(".vtu");
-                if (makePNG) {
-                    File pngFile = new File(split[0] + ".png");
-                    vtkOutput.saveImage(pngFile);
-                }
-            }
-        });
-
         return visualization;
     }
 
-    /**
-     * create default value lookup table.
-     *
-     * @param sRange
-     * @param ug
-     * @param minValueRange
-     * @param maxValueRange
-     * @param bShowLegend
-     * @param visualization
-     * @return
-     */
-    private vtkLookupTable createLookupTable(String sRange, String sDisplayStyle, String sDataStyle,
+    static private vtkLookupTable createLookupTable(String sRange, String sDisplayStyle, String sDataStyle,
             vtkUnstructuredGrid ug, double minValueRange, double maxValueRange,
             boolean bShowLegend, final Visualization visualization, String elementInFile) {
 
@@ -521,16 +512,7 @@ public class VTUViewer implements java.io.Serializable {
         return defaultLookupTable;
     }
 
-    /**
-     * create plain data visualization.
-     *
-     * @param sDataStyle
-     * @param defaultLookupTable
-     * @param ug
-     * @param sDisplayStyle
-     * @param visualization
-     */
-    private void createPlainDataVisualization(
+    static private void createPlainDataVisualization(
             vtkLookupTable defaultLookupTable, vtkUnstructuredGrid ug,
             String sDisplayStyle, final Visualization visualization) {
 
@@ -551,17 +533,7 @@ public class VTUViewer implements java.io.Serializable {
 
     }
 
-    /**
-     * create warped data visualization.
-     *
-     * @param ug
-     * @param sDataStyle
-     * @param warpFactor
-     * @param defaultLookupTable
-     * @param sDisplayStyle
-     * @param visualization
-     */
-    private void createWarpDataVisualization(vtkUnstructuredGrid ug,
+    static private void createWarpDataVisualization(vtkUnstructuredGrid ug,
             String sDataStyle, double warpFactor,
             vtkLookupTable defaultLookupTable, String sDisplayStyle,
             final Visualization visualization, String elementInFile) {
@@ -599,15 +571,7 @@ public class VTUViewer implements java.io.Serializable {
         visualization.addActor(warpActor);
     }
 
-    /**
-     *
-     * @param defaultLookupTable
-     * @param ug
-     * @param numContours
-     * @param sDisplayStyle
-     * @param visualization
-     */
-    private void createContourFilter(vtkLookupTable defaultLookupTable,
+    static private void createContourFilter(vtkLookupTable defaultLookupTable,
             vtkUnstructuredGrid ug, int numContours, String sDisplayStyle,
             final Visualization visualization) {
 
@@ -634,17 +598,7 @@ public class VTUViewer implements java.io.Serializable {
         visualization.addActor(contourActor);
     }
 
-    /**
-     *
-     * @param defaultLookupTable
-     * @param ug
-     * @param startsWith
-     * @param elementInFile
-     * @param scaleFactor
-     * @param sDisplayStyle
-     * @param visualization
-     */
-    private void createVectorFieldFilter(vtkLookupTable defaultLookupTable,
+    static private void createVectorFieldFilter(vtkLookupTable defaultLookupTable,
             vtkUnstructuredGrid ug, String startsWith,
             String elementInFile, int index, double scaleFactor,
             String sDisplayStyle, final Visualization visualization) {
@@ -688,12 +642,7 @@ public class VTUViewer implements java.io.Serializable {
         visualization.addActor(vectorActor);
     }
 
-    /**
-     *
-     * @param ug
-     * @param visualization
-     */
-    private void createOutlineFilter(vtkUnstructuredGrid ug,
+    static private void createOutlineFilter(vtkUnstructuredGrid ug,
             final Visualization visualization) {
 
         vtkOutlineFilter outline = new vtkOutlineFilter();
@@ -708,15 +657,7 @@ public class VTUViewer implements java.io.Serializable {
         visualization.addActor(outlineActor);
     }
 
-    /**
-     *
-     * @param sDisplayStyle
-     * @param ug
-     * @param elementInFile
-     * 
-     * @returns true if component could be set
-     */
-    private boolean settingScalarsOrVectors(String sDisplayStyle,
+    static private boolean settingScalarsOrVectors(String sDisplayStyle,
             vtkUnstructuredGrid ug,
             String elementInFile) {
 
@@ -740,14 +681,7 @@ public class VTUViewer implements java.io.Serializable {
         return true;
     }
 
-    /**
-     *
-     * @param sDisplayStyle
-     * @param ug
-     * @param elementInFile
-     * @return
-     */
-    private double[] getRange(String sDisplayStyle,
+    static private double[] getRange(String sDisplayStyle,
             vtkUnstructuredGrid ug,
             String elementInFile) {
 
@@ -783,7 +717,7 @@ public class VTUViewer implements java.io.Serializable {
         return valueMinMax;
     }
 
-    private void settingsForMappers(String sDisplayStyle, //vtkUnstructuredGrid ug,
+    static private void settingsForMappers(String sDisplayStyle, //vtkUnstructuredGrid ug,
             vtkMapper mapper, vtkLookupTable lookupTable) {
 
 //        mapper.SetInputConnection(ug.GetProducerPort()); // DONT DO THESE HERE
@@ -810,7 +744,7 @@ public class VTUViewer implements java.io.Serializable {
         mapper.Update();
     }
 
-    private void setDisplayStyle(vtkActor actor, String style) {
+    static private void setDisplayStyle(vtkActor actor, String style) {
 
         if (style.equals(DisplayStyle.SURFACE)) {
             actor.GetProperty().SetRepresentationToSurface();
@@ -833,7 +767,7 @@ public class VTUViewer implements java.io.Serializable {
         }
     }
 
-    private ArrayList<File> getAllFilesInFolder(@ParamInfo(style = "load-folder-dialog") File dir,
+    static private ArrayList<File> getAllFilesInFolder(@ParamInfo(style = "load-folder-dialog") File dir,
             @ParamInfo(name = "beginning, e.g. \"file00\"") final String startsWith,
             @ParamInfo(name = "ending, e.g. \"vtu\"") final String ending) {
 
