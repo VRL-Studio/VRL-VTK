@@ -76,7 +76,7 @@ public class VTUViewer implements java.io.Serializable {
     private transient File lastFile = null;
     private transient Thread thread = null;
     private transient ArrayList<File> lastAllFiles = new ArrayList<File>();
-    private transient DefaultMethodRepresentation mRep;
+    private transient DefaultMethodRepresentation mVisualizeMethodRep;
 
     protected Thread getThread() {
         synchronized (this) {
@@ -122,8 +122,7 @@ public class VTUViewer implements java.io.Serializable {
                 double minValueRange, double maxValueRange,
                 boolean bShowLegend, boolean bShowOutline, boolean showOrientation,
                 String sDataStyle, String sDisplayStyle,
-                double warpFactor, int numContours, double fieldScaleFactor,
-                String elementInFile, int index, String startsWith) {
+                double warpFactor, int numContours, double fieldScaleFactor, long wait) {
             this.title = title;
             //
             this.sRange = sRange;
@@ -137,13 +136,11 @@ public class VTUViewer implements java.io.Serializable {
             this.sDataStyle = sDataStyle;
             this.sDisplayStyle = sDisplayStyle;
             //
+            this.wait = wait;
+            //
             this.warpFactor = warpFactor;
             this.numContours = numContours;
             this.fieldScaleFactor = fieldScaleFactor;
-            //
-            this.elementInFile = elementInFile;
-            this.index = index;
-            this.startsWith = startsWith;
         }
 
         public PlotSetup() {
@@ -166,10 +163,13 @@ public class VTUViewer implements java.io.Serializable {
         public int numContours = 5;
         public double fieldScaleFactor = 0.05;
         //
+        long wait = 0;
+        //
         public String elementInFile = "";
         public int index = 0;
         public String startsWith = "";
     }
+    transient protected PlotSetup plotSetup = new PlotSetup();
 
     @OutputInfo(style = "multi-out",
     elemStyles = {"default", "silent"}, elemNames = {"", "File"},
@@ -190,73 +190,16 @@ public class VTUViewer implements java.io.Serializable {
             options = "fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") final String elemInFile,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "Produce PNG", options = "value=false")
-            final boolean makePNG,
-            @ParamGroupInfo(group = "Plot|false|Plot depending data.")
-            @ParamInfo(name = "Title", style = "default") final String title,
-            @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Frame Duration (in ms)", options = "value=0")
-            final long wait,
-            @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Range",
-            style = "selection",
-            options = "value=[\""
-            + VTUViewer.Range.AUTO + "\",\""
-            + VTUViewer.Range.MIN_MAX + "\"]") final String sRange,
-            @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Min",
-            style = "default",
-            options = "value=0",
-            nullIsValid = true) final double minValueRange,
-            @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Max",
-            style = "default",
-            options = "value=1",
-            nullIsValid = true) final double maxValueRange,
-            @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Show Data Legend", style = "default", options = "value=true") final boolean bShowLegend,
-            @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Show Outline", style = "default", options = "value=false") final boolean bShowOutline,
-            @ParamGroupInfo(group = "Plot")
-            @ParamInfo(name = "Show Orientation", style = "default") final boolean showOrientation,
-            @ParamGroupInfo(group = "Filters|false|Choose which filter should be used.")
-            @ParamInfo(name = "Display Style", style = "selection",
-            options = "value=[\""
-            + VTUViewer.DisplayStyle.SURFACE + "\",\""
-            + VTUViewer.DisplayStyle.SURFACE_EDGE + "\",\""
-            + VTUViewer.DisplayStyle.WIREFRAME + "\",\""
-            + VTUViewer.DisplayStyle.POINTS + "\",\""
-            + VTUViewer.DisplayStyle.VECTORFIELD + "\"]") final String sDisplayStyle,
-            @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Data Filter", style = "selection",
-            options = "value=[\""
-            + VTUViewer.DataStyle.NONE + "\",\""
-            + VTUViewer.DataStyle.WARP_AUTO + "\",\""
-            + VTUViewer.DataStyle.WARP_FACTOR + "\",\""
-            + VTUViewer.DataStyle.CONTOUR + "\"]") final String sDataStyle,
-            @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Warp Factor",
-            style = "default",
-            options = "value=1",
-            nullIsValid = true) final double warpFactor,
-            @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Num Contour",
-            style = "default",
-            options = "value=5",
-            nullIsValid = true) final int numContours,
-            @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Vector Field Scale Factor",
-            style = "default",
-            options = "value=0.05",
-            nullIsValid = true) final double fieldScaleFactor) {
+            final boolean makePNG) {
 
 
-        mRep = mReq.getMethod();
+        mVisualizeMethodRep = mReq.getMethod();
 
         final VTUAnalyzer analyzer = (VTUAnalyzer) VTypeObserveUtil.getFileAnanlyzerByClass(VTUAnalyzer.class);
         analyzer.setStartsWith(startsWith);
 
-        final int id = mRep.getParentObject().getObjectID();
-        final Object o = ((VisualCanvas) mRep.getMainCanvas()).getInspector().getObject(id);
+        final int id = mVisualizeMethodRep.getParentObject().getObjectID();
+        final Object o = ((VisualCanvas) mVisualizeMethodRep.getMainCanvas()).getInspector().getObject(id);
         final int windowID = 0;
         final String tag = "element";
 
@@ -322,13 +265,6 @@ public class VTUViewer implements java.io.Serializable {
 
                         System.out.println(" - - Loop Files in Thread");
 
-                        PlotSetup plotSetup = new PlotSetup(title,
-                                sRange, minValueRange, maxValueRange,
-                                bShowLegend, bShowOutline, showOrientation,
-                                sDataStyle, sDisplayStyle,
-                                warpFactor, numContours, fieldScaleFactor,
-                                elementInFile, index, startsWith);
-
                         for (File file : allFiles) {
 
                             if (lastAllFiles.contains(file)) {
@@ -337,14 +273,18 @@ public class VTUViewer implements java.io.Serializable {
 
                             System.out.println(" - - PLOT FILE");
 
+                            plotSetup.elementInFile = elementInFile;
+                            plotSetup.index = index;
+                            plotSetup.startsWith = startsWith;
+
                             lastVisualization = createVisualization(file, plotSetup);
                             lastFile = file;
 
                             VSwingUtil.invokeAndWait(new Runnable() {
-                            
+
                                 public void run() {
 
-                                    VTKOutputType vtkOutput = ((VTKOutputType) (((MultipleOutputType) mRep.getReturnValue()).getTypeContainers().get(0).getTypeRepresentation()));
+                                    VTKOutputType vtkOutput = ((VTKOutputType) (((MultipleOutputType) mVisualizeMethodRep.getReturnValue()).getTypeContainers().get(0).getTypeRepresentation()));
                                     vtkOutput.emptyView();
                                     vtkOutput.setViewValue(lastVisualization);
 
@@ -358,7 +298,7 @@ public class VTUViewer implements java.io.Serializable {
 
                             try {
                                 System.out.println("WAIT IN FILELOOP BEGIN");
-                                Thread.sleep(wait);
+                                Thread.sleep(plotSetup.wait);
                                 System.out.println("WAIT IN FILELOOP END");
                             } catch (InterruptedException ex) {
                                 Logger.getLogger(VTUViewer.class.getName()).log(Level.SEVERE, null, ex);
@@ -399,6 +339,81 @@ public class VTUViewer implements java.io.Serializable {
 
         //return lastVisualization;
         return new Object[]{lastVisualization, outFile};
+    }
+
+    @MethodInfo(hide = false, hideCloseIcon = true)
+    public void setup(
+            MethodRequest mReq,
+            @ParamGroupInfo(group = "Data")
+            @ParamInfo(name = "Data Component",
+            style = "observe-load-dialog",
+            options = "fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") final String elemInFile,
+            @ParamGroupInfo(group = "Data")
+            @ParamInfo(name = "Frame Duration (in ms)", options = "value=0")
+            final long wait,
+            //
+            @ParamGroupInfo(group = "Plot|false|Plot depending data.")
+            @ParamInfo(name = "Title", style = "default") final String title,
+            @ParamGroupInfo(group = "Plot")
+            @ParamInfo(name = "Range",
+            style = "selection",
+            options = "value=[\""
+            + VTUViewer.Range.AUTO + "\",\""
+            + VTUViewer.Range.MIN_MAX + "\"]") final String sRange,
+            @ParamGroupInfo(group = "Plot")
+            @ParamInfo(name = "Min",
+            style = "default",
+            options = "value=0",
+            nullIsValid = true) final double minValueRange,
+            @ParamGroupInfo(group = "Plot")
+            @ParamInfo(name = "Max",
+            style = "default",
+            options = "value=1",
+            nullIsValid = true) final double maxValueRange,
+            @ParamGroupInfo(group = "Plot")
+            @ParamInfo(name = "Show Data Legend", style = "default", options = "value=true") final boolean bShowLegend,
+            @ParamGroupInfo(group = "Plot")
+            @ParamInfo(name = "Show Outline", style = "default", options = "value=false") final boolean bShowOutline,
+            @ParamGroupInfo(group = "Plot")
+            @ParamInfo(name = "Show Orientation", style = "default") final boolean showOrientation,
+            //
+            @ParamGroupInfo(group = "Filters|false|Choose which filter should be used.")
+            @ParamInfo(name = "Display Style", style = "selection",
+            options = "value=[\""
+            + VTUViewer.DisplayStyle.SURFACE + "\",\""
+            + VTUViewer.DisplayStyle.SURFACE_EDGE + "\",\""
+            + VTUViewer.DisplayStyle.WIREFRAME + "\",\""
+            + VTUViewer.DisplayStyle.POINTS + "\",\""
+            + VTUViewer.DisplayStyle.VECTORFIELD + "\"]") final String sDisplayStyle,
+            @ParamGroupInfo(group = "Filters")
+            @ParamInfo(name = "Data Filter", style = "selection",
+            options = "value=[\""
+            + VTUViewer.DataStyle.NONE + "\",\""
+            + VTUViewer.DataStyle.WARP_AUTO + "\",\""
+            + VTUViewer.DataStyle.WARP_FACTOR + "\",\""
+            + VTUViewer.DataStyle.CONTOUR + "\"]") final String sDataStyle,
+            @ParamGroupInfo(group = "Filters")
+            @ParamInfo(name = "Warp Factor",
+            style = "default",
+            options = "value=1",
+            nullIsValid = true) final double warpFactor,
+            @ParamGroupInfo(group = "Filters")
+            @ParamInfo(name = "Num Contour",
+            style = "default",
+            options = "value=5",
+            nullIsValid = true) final int numContours,
+            @ParamGroupInfo(group = "Filters")
+            @ParamInfo(name = "Vector Field Scale Factor",
+            style = "default",
+            options = "value=0.05",
+            nullIsValid = true) final double fieldScaleFactor) {
+
+        this.plotSetup = new PlotSetup(title,
+                sRange, minValueRange, maxValueRange,
+                bShowLegend, bShowOutline, showOrientation,
+                sDataStyle, sDisplayStyle,
+                warpFactor, numContours, fieldScaleFactor, wait);
+
     }
 
     static protected Visualization createVisualization(File file, PlotSetup plotSetup) {
@@ -809,20 +824,17 @@ public class VTUViewer implements java.io.Serializable {
 
         VisualCanvas canvas = (VisualCanvas) vObj.getMainCanvas();
 
-        final DefaultMethodRepresentation mRep = vObj.getObjectRepresentation().
+        final DefaultMethodRepresentation mVisualizeRep = vObj.getObjectRepresentation().
                 getMethodBySignature("visualize", MethodRequest.class,
                 File.class, String.class, String.class,
-                boolean.class, String.class, long.class,
-                String.class, double.class, double.class,
-                boolean.class, boolean.class, boolean.class,
-                String.class, String.class, double.class,
-                int.class, double.class);
+                boolean.class, long.class);
 
-        System.out.println(" - - " + getClass().getSimpleName() + ".showCode(): ");
-
-        // START setting some parameters visible or not, depending on other parameters
-
-//        Assume mReq is parameter 0
+        final DefaultMethodRepresentation mSetupRep = vObj.getObjectRepresentation().
+                getMethodBySignature("setup", MethodRequest.class,
+                String.class, long.class, String.class,
+                String.class, double.class, double.class, 
+                boolean.class, boolean.class, boolean.class, 
+                String.class, String.class, double.class, int.class, double.class);
 
         final ActionListener fileOrFolderListener = new ActionListener() {
             // set visibility for startsWith (2)
@@ -835,7 +847,7 @@ public class VTUViewer implements java.io.Serializable {
                 if (e.getActionCommand().equals(
                         LoadObserveFileType.FILE_OR_FOLDER_LOADED_ACTION)) {
 
-                    File fileOrFolder = (File) mRep.getParameter(1).getViewValueWithoutValidation();
+                    File fileOrFolder = (File) mVisualizeRep.getParameter(1).getViewValueWithoutValidation();
 
                     // if folder does not exist, do nothing
                     if (fileOrFolder == null) {
@@ -847,7 +859,7 @@ public class VTUViewer implements java.io.Serializable {
 
                     System.out.println(" - - fileOrFolderListener: " + fileOrFolder.getName());
 
-                    TypeRepresentationBase tRep = mRep.getParameter(2);
+                    TypeRepresentationBase tRep = mVisualizeRep.getParameter(2);
 
                     if (fileOrFolder.isDirectory()) {
 
@@ -855,7 +867,7 @@ public class VTUViewer implements java.io.Serializable {
 
                         tRep.setVisible(true);
                         tRep.getConnector().setVisible(true);
-                        mRep.getParameter(1).setValueName("Folder");
+                        mVisualizeRep.getParameter(1).setValueName("Folder");
 
                     } else if (fileOrFolder.isFile()) {
 
@@ -863,7 +875,7 @@ public class VTUViewer implements java.io.Serializable {
 
                         tRep.setVisible(false);
                         tRep.getConnector().setVisible(false);
-                        mRep.getParameter(1).setValueName("File");
+                        mVisualizeRep.getParameter(1).setValueName("File");
                     }
 
                 }
@@ -882,12 +894,12 @@ public class VTUViewer implements java.io.Serializable {
                         //                        TypeRepresentationBase.SET_VIEW_VALUE_ACTION
                         SelectionInputType.SELECTION_CHANGED_ACTION)) {
 
-                    String sRange = (String) mRep.getParameter(7).getViewValueWithoutValidation();
+                    String sRange = (String) mSetupRep.getParameter(4).getViewValueWithoutValidation();
 
                     System.out.println(" - - sRangeListener: " + sRange);
 
-                    TypeRepresentationBase tRep8 = mRep.getParameter(8);
-                    TypeRepresentationBase tRep9 = mRep.getParameter(9);
+                    TypeRepresentationBase tRep8 = mSetupRep.getParameter(5);
+                    TypeRepresentationBase tRep9 = mSetupRep.getParameter(6);
 
                     if (sRange.equals(Range.AUTO)) {
 
@@ -922,11 +934,11 @@ public class VTUViewer implements java.io.Serializable {
                         //                        TypeRepresentationBase.SET_VIEW_VALUE_ACTION
                         SelectionInputType.SELECTION_CHANGED_ACTION)) {
 
-                    String sDataStyle = (String) mRep.getParameter(14).getViewValueWithoutValidation();
+                    String sDataStyle = (String) mSetupRep.getParameter(11).getViewValueWithoutValidation();
 
                     System.out.println(" - - warpListener: " + sDataStyle);
 
-                    TypeRepresentationBase tRep = mRep.getParameter(15);
+                    TypeRepresentationBase tRep = mSetupRep.getParameter(12);
 
                     if (sDataStyle.equals(DataStyle.WARP_FACTOR)) {
 
@@ -955,11 +967,11 @@ public class VTUViewer implements java.io.Serializable {
                         //                        TypeRepresentationBase.SET_VIEW_VALUE_ACTION
                         SelectionInputType.SELECTION_CHANGED_ACTION)) {
 
-                    String sDataStyle = (String) mRep.getParameter(14).getViewValueWithoutValidation();
+                    String sDataStyle = (String) mSetupRep.getParameter(11).getViewValueWithoutValidation();
 
                     System.out.println(" - - contourListener: " + sDataStyle);
 
-                    TypeRepresentationBase tRep = mRep.getParameter(16);
+                    TypeRepresentationBase tRep = mSetupRep.getParameter(13);
 
                     if (sDataStyle.equals(DataStyle.CONTOUR)) {
                         tRep.setVisible(true);
@@ -985,15 +997,15 @@ public class VTUViewer implements java.io.Serializable {
                         //                        TypeRepresentationBase.SET_VIEW_VALUE_ACTION
                         SelectionInputType.SELECTION_CHANGED_ACTION)) {
 
-                    String sDisplayStyle = (String) mRep.getParameter(13).getViewValueWithoutValidation();
+                    String sDisplayStyle = (String) mSetupRep.getParameter(10).getViewValueWithoutValidation();
 
                     // START for DEBUG only
-                    String sDataStyle = (String) mRep.getParameter(14).getViewValueWithoutValidation();
+                    String sDataStyle = (String) mSetupRep.getParameter(11).getViewValueWithoutValidation();
                     System.out.println(" - - fieldScaleListener: Styles: Display = "
                             + sDisplayStyle + " , Data = " + sDataStyle);
                     // END for DEBUG only
 
-                    TypeRepresentationBase tRep = mRep.getParameter(17);
+                    TypeRepresentationBase tRep = mSetupRep.getParameter(14);
 
                     if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
 
@@ -1012,11 +1024,12 @@ public class VTUViewer implements java.io.Serializable {
 
 //        System.out.println(" - - mRep.getParameter(13) = " + mRep.getParameter(13));
 
-        mRep.getParameter(13).getActionListeners().add(fieldScaleListener);
-        mRep.getParameter(14).getActionListeners().add(contourListener);
-        mRep.getParameter(14).getActionListeners().add(warpListener);
-        mRep.getParameter(7).getActionListeners().add(sRangeListener);
-        mRep.getParameter(1).getActionListeners().add(fileOrFolderListener);
+        mSetupRep.getParameter(10).getActionListeners().add(fieldScaleListener);
+        mSetupRep.getParameter(11).getActionListeners().add(contourListener);
+        mSetupRep.getParameter(11).getActionListeners().add(warpListener);
+        mSetupRep.getParameter(4).getActionListeners().add(sRangeListener);
+        
+        mVisualizeRep.getParameter(1).getActionListeners().add(fileOrFolderListener);
 
 
         // START init action (dirty but needed)
