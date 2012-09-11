@@ -5,30 +5,23 @@ import eu.mihosoft.vrl.annotation.MethodInfo;
 import eu.mihosoft.vrl.annotation.OutputInfo;
 import eu.mihosoft.vrl.annotation.ParamGroupInfo;
 import eu.mihosoft.vrl.annotation.ParamInfo;
-import eu.mihosoft.vrl.dialogs.FileDialogManager;
 import eu.mihosoft.vrl.reflection.DefaultMethodRepresentation;
 import eu.mihosoft.vrl.reflection.TypeRepresentationBase;
 import eu.mihosoft.vrl.reflection.VisualCanvas;
 import eu.mihosoft.vrl.reflection.VisualObject;
 import eu.mihosoft.vrl.system.VMessage;
-import eu.mihosoft.vrl.types.CanvasRequest;
-import eu.mihosoft.vrl.types.InputCodeType;
 import eu.mihosoft.vrl.types.MethodRequest;
 import eu.mihosoft.vrl.types.MultipleOutputType;
 import eu.mihosoft.vrl.types.SelectionInputType;
-import eu.mihosoft.vrl.types.VisualIDRequest;
 import eu.mihosoft.vrl.types.observe.LoadFileObservable;
 import eu.mihosoft.vrl.types.observe.LoadObserveFileType;
 import eu.mihosoft.vrl.types.observe.VTypeObserveUtil;
 import eu.mihosoft.vrl.visual.VSwingUtil;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vtk.vtkActor;
@@ -40,7 +33,6 @@ import vtk.vtkGlyph3D;
 import vtk.vtkLookupTable;
 import vtk.vtkMapper;
 import vtk.vtkOutlineFilter;
-import vtk.vtkPolyDataAlgorithm;
 import vtk.vtkPolyDataMapper;
 import vtk.vtkProperty;
 import vtk.vtkUnstructuredGrid;
@@ -132,7 +124,7 @@ public class VTUViewer implements java.io.Serializable {
             @ParamGroupInfo(group = "Files|false|File depending data.")
             @ParamInfo(name = "Folder or File",
             style = "observe-load-dialog",
-            options = "fileAnalyzer=\"VTUAnalyzer\";tag=\"element\"") final File fileOrFolder,
+            options = "tag=\"element\"") final File fileOrFolder,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "File Beginning",
             nullIsValid = true) final String startsWith,
