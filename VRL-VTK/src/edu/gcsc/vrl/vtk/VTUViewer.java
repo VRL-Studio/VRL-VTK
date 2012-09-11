@@ -17,6 +17,7 @@ import eu.mihosoft.vrl.types.MethodRequest;
 import eu.mihosoft.vrl.types.MultipleOutputType;
 import eu.mihosoft.vrl.types.SelectionInputType;
 import eu.mihosoft.vrl.types.VisualIDRequest;
+import eu.mihosoft.vrl.types.observe.LoadFileObservable;
 import eu.mihosoft.vrl.types.observe.LoadObserveFileType;
 import eu.mihosoft.vrl.types.observe.VTypeObserveUtil;
 import eu.mihosoft.vrl.visual.VSwingUtil;
@@ -78,11 +79,48 @@ public class VTUViewer implements java.io.Serializable {
         private static final String WARP_FACTOR = "Warp (Factor)";
         private static final String CONTOUR = "Contour";
     }
-    
     private transient Visualization lastVisualization = new Visualization();
     private transient Thread thread = null;
     private transient ArrayList<File> lastAllFiles = new ArrayList<File>();
     private transient DefaultMethodRepresentation mRep;
+
+    protected Thread getThread() {
+        synchronized (this) {
+            return thread;
+        }
+    }
+
+    protected void setThread(Thread thread) {
+        synchronized (this) {
+            this.thread = thread;
+        }
+    }
+
+    protected boolean isAlive() {
+        synchronized (this) {
+            if (this.thread != null) {
+                return this.thread.isAlive();
+            } else {
+                return false;
+            }
+        }
+    }
+
+    protected void startThread() {
+        synchronized (this) {
+            if (this.thread != null) {
+                this.thread.start();
+            }
+        }
+    }
+
+    protected void interruptThread() {
+        synchronized (this) {
+            if (this.thread != null) {
+                this.thread.interrupt();
+            }
+        }
+    }
 
     @OutputInfo(style = "multi-out",
     elemStyles = {"default", "silent"}, elemNames = {"", "File"},
@@ -162,14 +200,30 @@ public class VTUViewer implements java.io.Serializable {
             options = "value=0.05",
             nullIsValid = true) final double fieldScaleFactor) {
 
+
         mRep = mReq.getMethod();
+
+        final VTUAnalyzer analyzer = (VTUAnalyzer) VTypeObserveUtil.getFileAnanlyzerByClass(VTUAnalyzer.class);
+        analyzer.setStartsWith(startsWith);
+
+        final int id = mRep.getParentObject().getObjectID();
+        final Object o = ((VisualCanvas) mRep.getMainCanvas()).getInspector().getObject(id);
+        final int windowID = 0;
+        final String tag = "element";
+
+        if (!fileOrFolder.getAbsolutePath().isEmpty() && fileOrFolder.exists()) {
+            LoadFileObservable.getInstance().setSelectedFile(
+                    fileOrFolder, analyzer, tag, o, windowID);
+        } else {
+            LoadFileObservable.getInstance().setInvalidFile(tag, o, windowID);
+        }
 
         lastVisualization = new Visualization();
 
         // stop current thread iff running
-        if (thread != null) {
-            thread.interrupt();
-            while (thread != null && thread.isAlive()) {
+        if (getThread() != null) {
+            interruptThread();
+            while (getThread() != null && isAlive()) {
                 // wait
             }
             System.out.println("Setting running to false and INTERRUPT");
@@ -179,7 +233,7 @@ public class VTUViewer implements java.io.Serializable {
         System.out.println("Setting running to true");
 
         // start new vis thread
-        thread = new Thread(new Runnable() {
+        setThread(new Thread(new Runnable() {
 
             @Override
             public void run() {
@@ -200,7 +254,14 @@ public class VTUViewer implements java.io.Serializable {
 
                         if (!filesAnalysed && !allFiles.isEmpty()) {
                             System.out.println(" ***** ANALYSE FILE ***** ");
-                            VTypeObserveUtil.getFileAnanlyzerByClass(VTUAnalyzer.class).createAndAnalyseFile(allFiles.get(0));
+                            analyzer.analyzeFile(allFiles.get(0));
+                            if (!fileOrFolder.getAbsolutePath().isEmpty() && fileOrFolder.exists()) {
+                                LoadFileObservable.getInstance().setSelectedFile(
+                                        fileOrFolder, analyzer, tag, o, windowID);
+                            } else {
+                                LoadFileObservable.getInstance().setInvalidFile(tag, o, windowID);
+                            }
+                            filesAnalysed = true;
                         }
 
                         System.out.println(" - - Loop Files in Thread");
@@ -208,7 +269,6 @@ public class VTUViewer implements java.io.Serializable {
                         for (File file : allFiles) {
 
                             if (lastAllFiles.contains(file)) {
-                                System.out.println(" - - File contained");
                                 continue;
                             }
 
@@ -225,7 +285,7 @@ public class VTUViewer implements java.io.Serializable {
                                 visualization.setTitle(title);
                             }
 
-                            VTypeObserveUtil.getFileAnanlyzerByClass(VTUAnalyzer.class).createAndAnalyseFile(file);
+                            VTypeObserveUtil.getFileAnanlyzerByClass(VTUAnalyzer.class).analyzeFile(file);
 
                             final String fileName = file.getAbsolutePath();//getAbsoluteFile();
 //            System.out.println("-- fileName = "+ fileName);
@@ -340,12 +400,12 @@ public class VTUViewer implements java.io.Serializable {
                 }
 
                 System.out.println(" LEAVING WHILE LOOP");
-                thread = null;
+                setThread(null);
                 lastAllFiles = new ArrayList<File>();
             }
-        });
+        }));
 
-        thread.start();
+        startThread();
 
         File outFile;
         if (fileOrFolder.isDirectory()) {
@@ -696,8 +756,8 @@ public class VTUViewer implements java.io.Serializable {
 
         mapper.Update();
     }
-    
-        private void setDisplayStyle(vtkActor actor, String style) {
+
+    private void setDisplayStyle(vtkActor actor, String style) {
 
         if (style.equals(DisplayStyle.SURFACE)) {
             actor.GetProperty().SetRepresentationToSurface();

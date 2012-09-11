@@ -34,7 +34,7 @@ class VTUAnalyzer implements FileAnalyzer {
      *
      * @return the
      */
-    public File createAndAnalyseFile(File file) {
+    public void analyzeFile(File file) {
         //delete previous entries resp. new list
         fileEntries = new ArrayList<String>();
 
@@ -64,8 +64,6 @@ class VTUAnalyzer implements FileAnalyzer {
             }
 
         }
-
-        return file;
     }
 
     private ArrayList<File> getAllFilesInFolder(File dir, final String startsWith) {
