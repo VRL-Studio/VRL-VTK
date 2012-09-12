@@ -215,8 +215,10 @@ public class VTUViewer implements java.io.Serializable {
                         File file = allFiles.get(0);
                         if (!file.getAbsolutePath().isEmpty() && file.exists()) {
 
-                            LoadFileObservable.getInstance().setSelectedFile(file, tag, o, windowID);
-
+                            if (!file.equals(LoadFileObservable.getInstance().getSelectedFile(tag, o, windowID))) {
+                                LoadFileObservable.getInstance().setSelectedFile(file, tag, o, windowID);
+                            }
+                            
                             if (plotSetup.elementInFile.equals("")) {
                                 ArrayList<String> list = new ArrayList<String>();
                                 list.addAll(analyzer.analyzeFile(file));
