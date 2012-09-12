@@ -73,6 +73,13 @@ public class VTUViewer implements java.io.Serializable {
         private static final String WARP_FACTOR = "Warp (Factor)";
         private static final String CONTOUR = "Contour";
     }
+    
+    public static enum DataType {
+        INVALID,
+        POINT,
+        CELL
+    }
+    
     private transient Visualization lastVisualization = new Visualization();
     private transient File lastFile = null;
     private transient Thread thread = null;
@@ -157,10 +164,13 @@ public class VTUViewer implements java.io.Serializable {
         public Long wait = 0L;
         public Boolean makePNG = false;
         //
-        public String elementInFile = "";
-        public Integer index = 0;
         public File fileOrFolder = null;
         public String startsWith = "";
+        //
+        public String elementInFile = "";
+        public Integer index = 0;
+        public DataType dataType = DataType.INVALID;
+        public vtkDataArray dataArray = null;
     }
     transient protected PlotSetup plotSetup = new PlotSetup();
 
@@ -455,7 +465,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkUnstructuredGrid ug = reader.GetOutput();
 
         // set data field
-        if (updateDataArrays(plotSetup.sDisplayStyle, ug, plotSetup.elementInFile) == false) {
+        if (updateDataArrays(ug, plotSetup) == false) {
             return visualization;
         }
 
@@ -463,7 +473,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkLookupTable defaultLookupTable = createLookupTable(
                 plotSetup.sRange, plotSetup.sDisplayStyle, plotSetup.sDataStyle, ug,
                 plotSetup.minValueRange, plotSetup.maxValueRange,
-                plotSetup.bShowLegend, visualization, plotSetup.elementInFile);
+                plotSetup.bShowLegend, visualization, plotSetup.dataArray);
 
         // create Filters
         if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
@@ -487,7 +497,7 @@ public class VTUViewer implements java.io.Serializable {
                     || plotSetup.sDataStyle.equals(DataStyle.WARP_FACTOR)) {
 
                 addWarpDataVisualization(ug, plotSetup.sDataStyle, plotSetup.warpFactor,
-                        defaultLookupTable, plotSetup.sDisplayStyle, visualization, plotSetup.elementInFile);
+                        defaultLookupTable, plotSetup.sDisplayStyle, visualization, plotSetup.dataArray);
             }
 
             if (plotSetup.sDataStyle.equals(DataStyle.CONTOUR)) {
@@ -508,7 +518,7 @@ public class VTUViewer implements java.io.Serializable {
 
     static private vtkLookupTable createLookupTable(String sRange, String sDisplayStyle, String sDataStyle,
             vtkUnstructuredGrid ug, double minValueRange, double maxValueRange,
-            boolean bShowLegend, final Visualization visualization, String elementInFile) {
+            boolean bShowLegend, final Visualization visualization,  vtkDataArray dataArray) {
 
         vtkLookupTable defaultLookupTable = new vtkLookupTable();
 
@@ -516,8 +526,7 @@ public class VTUViewer implements java.io.Serializable {
 
         if (sRange.equals(Range.AUTO)) {
 
-            valRange = getRange(sDisplayStyle, ug, elementInFile);
-
+            valRange = getRange(dataArray);
             minValueRange = valRange[0];
             maxValueRange = valRange[1];
         }
@@ -545,7 +554,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkDataSetMapper plainMapper = new vtkDataSetMapper();
         plainMapper.SetInput(ug);
 
-        updateSettingsForMapper(sDisplayStyle, plainMapper, plainLookupTable);
+        setSettingsForMapper(sDisplayStyle, plainMapper, plainLookupTable);
 
         vtkActor plainActor = new vtkActor();
         plainActor.SetMapper(plainMapper);
@@ -559,9 +568,9 @@ public class VTUViewer implements java.io.Serializable {
     static private void addWarpDataVisualization(vtkUnstructuredGrid ug,
             String sDataStyle, double warpFactor,
             vtkLookupTable defaultLookupTable, String sDisplayStyle,
-            final Visualization visualization, String elementInFile) {
+            final Visualization visualization, vtkDataArray dataArray) {
 
-        double[] valueMinMax = getRange(sDisplayStyle, ug, elementInFile);
+        double[] valueMinMax = getRange(dataArray);
 
         double factor = 1.0 / (valueMinMax[1] - valueMinMax[0]);
 
@@ -580,7 +589,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkDataSetMapper warpMapper = new vtkDataSetMapper();
         warpMapper.SetInputConnection(warpScalar.GetOutputPort());
 
-        updateSettingsForMapper(sDisplayStyle, warpMapper, warpTable);
+        setSettingsForMapper(sDisplayStyle, warpMapper, warpTable);
 
         vtkActor warpActor = new vtkActor();
         warpActor.SetMapper(warpMapper);
@@ -604,7 +613,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkPolyDataMapper contourMapper = new vtkPolyDataMapper();
         contourMapper.SetInput(contours.GetOutput());
 
-        updateSettingsForMapper(sDisplayStyle, contourMapper, contourTable);
+        setSettingsForMapper(sDisplayStyle, contourMapper, contourTable);
 
         vtkActor contourActor = new vtkActor();
         contourActor.SetMapper(contourMapper);
@@ -641,7 +650,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkPolyDataMapper vectorGlyphMapper = new vtkPolyDataMapper();
         vectorGlyphMapper.SetInput(vectorGlyph.GetOutput());
 
-        updateSettingsForMapper(sDisplayStyle, vectorGlyphMapper, vectorfieldTable);
+        setSettingsForMapper(sDisplayStyle, vectorGlyphMapper, vectorfieldTable);
 
         //optional setttings for lightning
         vtkProperty sliceProp = new vtkProperty();
@@ -673,93 +682,60 @@ public class VTUViewer implements java.io.Serializable {
         visualization.addActor(outlineActor);
     }
 
-    static private boolean updateDataArrays(String sDisplayStyle,
-            vtkUnstructuredGrid ug,
-            String elementInFile) {
+    static private boolean updateDataArrays(vtkUnstructuredGrid ug,
+            PlotSetup plotSetup) {
 
         // try point data
-        boolean pointData = true;
-        vtkDataArray dataArray = ug.GetPointData().GetArray(elementInFile);
+        plotSetup.dataArray = ug.GetPointData().GetArray(plotSetup.elementInFile);
+        plotSetup.dataType = DataType.POINT;
 
         // try cell data
-        if (dataArray == null) {
-            dataArray = ug.GetCellData().GetArray(elementInFile);
-            pointData = false;
+        if (plotSetup.dataArray == null) {
+            plotSetup.dataArray = ug.GetCellData().GetArray(plotSetup.elementInFile);
+            plotSetup.dataType = DataType.CELL;
         }
 
         // if not successful, return false
-        if (dataArray == null) {
-            System.out.println(" SETTING DATA: Cannot read data.");
+        if (plotSetup.dataArray == null) {
+            plotSetup.dataType = DataType.INVALID;
             return false;
         }
 
-        if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
-            if (pointData) {
-                ug.GetPointData().SetVectors(dataArray);
-            } else {
-                ug.GetCellData().SetVectors(dataArray);
+        if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
+            switch(plotSetup.dataType){
+                case POINT: ug.GetPointData().SetVectors(plotSetup.dataArray); break;
+                case CELL:  ug.GetCellData().SetVectors(plotSetup.dataArray); break;
+                default: throw new RuntimeException("Data type not found.");
             }
         } else {
-            if (pointData) {
-                ug.GetPointData().SetScalars(dataArray);
-            } else {
-                ug.GetCellData().SetScalars(dataArray);
+            switch(plotSetup.dataType){
+                case POINT: ug.GetPointData().SetScalars(plotSetup.dataArray); break;
+                case CELL:  ug.GetCellData().SetScalars(plotSetup.dataArray); break;
+                default: throw new RuntimeException("Data type not found.");
             }
         }
 
         return true;
     }
 
-    static private double[] getRange(String sDisplayStyle,
-            vtkUnstructuredGrid ug,
-            String elementInFile) {
-
-        updateDataArrays(sDisplayStyle, ug, elementInFile);
-
-        // try point data
-        boolean pointData = true;
-        vtkDataArray dataArray = ug.GetPointData().GetArray(elementInFile);
-
-        // try cell data
-        if (dataArray == null) {
-            dataArray = ug.GetCellData().GetArray(elementInFile);
-            pointData = false;
-        }
-
-        if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
-
-            if (pointData) {
-                dataArray = ug.GetPointData().GetVectors();
-            } else {
-                dataArray = ug.GetCellData().GetVectors();
-            }
-        } else {
-
-            if (pointData) {
-                dataArray = ug.GetPointData().GetScalars();
-            } else {
-                dataArray = ug.GetCellData().GetScalars();
-            }
-        }
+    static private double[] getRange(vtkDataArray dataArray) {
 
         double[] valueMinMax;
 
         if (dataArray != null) {
             valueMinMax = dataArray.GetRange();
-
         } else {
             VMessage.exception("ERROR", "The choosen parameter combination led to"
                     + " an invalid state. Please check your selection. \n"
                     + " E.g: select only vector field as DisplayStyle if the a"
                     + " vector field is selected from a vtu file.");
-
             valueMinMax = null;
         }
 
         return valueMinMax;
     }
 
-    static private void updateSettingsForMapper(String sDisplayStyle,
+    static private void setSettingsForMapper(String sDisplayStyle,
             vtkMapper mapper, vtkLookupTable lookupTable) {
 
         mapper.SetLookupTable(lookupTable);
