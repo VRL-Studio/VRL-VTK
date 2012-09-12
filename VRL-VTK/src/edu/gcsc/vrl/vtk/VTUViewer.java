@@ -335,7 +335,7 @@ public class VTUViewer implements java.io.Serializable {
 
         // start new thread
         setThread(new Thread(new VisThread(plotSetup)));
-        //VRL.getCurrentProjectController().addSessionThread(getThread());
+        VRL.getCurrentProjectController().addSessionThread(getThread());
         startThread();
 
         // determinte file path
