@@ -204,8 +204,6 @@ public class VTUViewer implements java.io.Serializable {
                 int waitingTime = initWaitingTime;
 
                 while (true) {
-
-                    System.out.println("Running: " + System.nanoTime());
                     
                     ArrayList<File> allFiles = getAllFilesInFolder(plotSetup.fileOrFolder, plotSetup.startsWith, "vtu");
 
