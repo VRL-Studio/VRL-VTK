@@ -186,7 +186,6 @@ public class VTUViewer implements java.io.Serializable {
 
         @Override
         public void run() {
-            System.out.println(" *** Start Thread");
             try {
 
                 final VTUAnalyzer analyzer = (VTUAnalyzer) VTypeObserveUtil.getFileAnanlyzerByClass(VTUAnalyzer.class);
@@ -198,7 +197,10 @@ public class VTUViewer implements java.io.Serializable {
                 final String tag = "element";
 
                 boolean filesAnalysed = false;
-                int waitingTime = 100;
+                final int initWaitingTime = 10;
+                final int waitingTimeIncreaseFactor = 2;
+                final int maxWaitingTime = 1000;
+                int waitingTime = initWaitingTime;
 
                 while (true) {
 
@@ -208,10 +210,14 @@ public class VTUViewer implements java.io.Serializable {
                     if (lastAllFiles.size() == allFiles.size()) {
                         if (lastAllFiles.equals(allFiles)) {
                             Thread.sleep(waitingTime);
-                            System.out.println(" **** Waiting in while loop");
+                            waitingTime *= waitingTimeIncreaseFactor;
+                            if(waitingTime > maxWaitingTime) {
+                                waitingTime = maxWaitingTime;
+                            }
                             continue;
                         }
                     }
+                    waitingTime = initWaitingTime;
 
                     if (!filesAnalysed && !allFiles.isEmpty()) {
                         File file = allFiles.get(0);
@@ -234,10 +240,7 @@ public class VTUViewer implements java.io.Serializable {
                         }
 
                         filesAnalysed = true;
-                        waitingTime = 1000;
                     }
-
-                    System.out.println(" **** Looping files -- start");
 
                     for (File file : allFiles) {
 
@@ -280,13 +283,10 @@ public class VTUViewer implements java.io.Serializable {
                         break;
                     }
 
-                    System.out.println(" **** Looping files -- end");
                 } // end while
             } catch (Exception ex) {
                 ex.printStackTrace(System.err);
             }
-
-            System.out.println(" *** Finish thread");
         }
     }
 
