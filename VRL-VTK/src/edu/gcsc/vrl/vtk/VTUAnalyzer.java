@@ -57,7 +57,7 @@ class VTUAnalyzer implements FileAnalyzer {
             }
 
             System.out.println("CELL DATA IN FILE:");
-            int numCellData = ug.GetPointData().GetNumberOfArrays();
+            int numCellData = ug.GetCellData().GetNumberOfArrays();
             for (int i = 0; i < numCellData; i++) {
                 fileEntries.add(ug.GetCellData().GetArrayName(i));
                 System.out.println("" + i + ": " + ug.GetCellData().GetArrayName(i));

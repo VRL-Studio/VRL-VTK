@@ -73,13 +73,13 @@ public class VTUViewer implements java.io.Serializable {
         private static final String WARP_FACTOR = "Warp (Factor)";
         private static final String CONTOUR = "Contour";
     }
-    
+
     public static enum DataType {
+
         INVALID,
         POINT,
         CELL
     }
-    
     private transient Visualization lastVisualization = new Visualization();
     private transient File lastFile = null;
     private transient Thread thread = null;
@@ -241,7 +241,13 @@ public class VTUViewer implements java.io.Serializable {
                             continue;
                         }
 
-                        lastVisualization = createVisualization(file, plotSetup);
+                        Visualization visualization = createVisualization(file, plotSetup);
+
+                        if (visualization == null) {
+                            continue;
+                        }
+
+                        lastVisualization = visualization;
                         lastFile = file;
 
                         SwingUtilities.invokeAndWait(new Runnable() {
@@ -466,7 +472,7 @@ public class VTUViewer implements java.io.Serializable {
 
         // set data field
         if (updateDataArrays(ug, plotSetup) == false) {
-            return visualization;
+            return null;
         }
 
         // create Data lookup table
@@ -518,7 +524,7 @@ public class VTUViewer implements java.io.Serializable {
 
     static private vtkLookupTable createLookupTable(String sRange, String sDisplayStyle, String sDataStyle,
             vtkUnstructuredGrid ug, double minValueRange, double maxValueRange,
-            boolean bShowLegend, final Visualization visualization,  vtkDataArray dataArray) {
+            boolean bShowLegend, final Visualization visualization, vtkDataArray dataArray) {
 
         vtkLookupTable defaultLookupTable = new vtkLookupTable();
 
@@ -702,16 +708,26 @@ public class VTUViewer implements java.io.Serializable {
         }
 
         if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
-            switch(plotSetup.dataType){
-                case POINT: ug.GetPointData().SetVectors(plotSetup.dataArray); break;
-                case CELL:  ug.GetCellData().SetVectors(plotSetup.dataArray); break;
-                default: throw new RuntimeException("Data type not found.");
+            switch (plotSetup.dataType) {
+                case POINT:
+                    ug.GetPointData().SetVectors(plotSetup.dataArray);
+                    break;
+                case CELL:
+                    ug.GetCellData().SetVectors(plotSetup.dataArray);
+                    break;
+                default:
+                    throw new RuntimeException("Data type not found.");
             }
         } else {
-            switch(plotSetup.dataType){
-                case POINT: ug.GetPointData().SetScalars(plotSetup.dataArray); break;
-                case CELL:  ug.GetCellData().SetScalars(plotSetup.dataArray); break;
-                default: throw new RuntimeException("Data type not found.");
+            switch (plotSetup.dataType) {
+                case POINT:
+                    ug.GetPointData().SetScalars(plotSetup.dataArray);
+                    break;
+                case CELL:
+                    ug.GetCellData().SetScalars(plotSetup.dataArray);
+                    break;
+                default:
+                    throw new RuntimeException("Data type not found.");
             }
         }
 
