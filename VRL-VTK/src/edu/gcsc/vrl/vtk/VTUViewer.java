@@ -246,7 +246,7 @@ public class VTUViewer implements java.io.Serializable {
                             }
                         });
 
-                        Thread.sleep(plotSetup.wait+1);
+                        Thread.sleep(plotSetup.wait + 1);
                     } // end for files
 
                     lastAllFiles = allFiles;
@@ -266,6 +266,15 @@ public class VTUViewer implements java.io.Serializable {
         }
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            interruptThread();
+        } finally {
+            super.finalize();
+        }
+    }
+
     @OutputInfo(style = "multi-out",
     elemStyles = {"default", "silent"}, elemNames = {"", "File"},
     elemTypes = {Visualization.class, File.class})
@@ -274,7 +283,7 @@ public class VTUViewer implements java.io.Serializable {
             MethodRequest mReq,
             @ParamGroupInfo(group = "Files|true|File depending data.")
             @ParamInfo(name = "Folder or File",
-            style = "observe-load-dialog",
+            style = "observe-save-dialog",
             options = "tag=\"element\"") final File fileOrFolder,
             @ParamGroupInfo(group = "Files")
             @ParamInfo(name = "File Beginning",
