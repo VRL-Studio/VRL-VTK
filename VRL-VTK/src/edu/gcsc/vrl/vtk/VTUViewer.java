@@ -432,69 +432,77 @@ public class VTUViewer implements java.io.Serializable {
 
     static protected Visualization createVisualization(File file, PlotSetup plotSetup) {
 
+        // create new Visualization
         final Visualization visualization = new Visualization();
 
+        // set orientation triad
         visualization.setOrientationVisible(plotSetup.showOrientation);
 
-        if (plotSetup.title.isEmpty()) {
-        } else {
+        // set title
+        if (!plotSetup.title.isEmpty()) {
             visualization.setTitle(plotSetup.title);
         }
 
+        // get filename
         final String fileName = file.getAbsolutePath();//getAbsoluteFile();
 
+        // read data from file
         vtkXMLUnstructuredGridReader reader = new vtkXMLUnstructuredGridReader();
         reader.SetFileName(fileName);
         reader.Update();
 
+        // get grid
         vtkUnstructuredGrid ug = reader.GetOutput();
 
-
-        if (settingScalarsOrVectors(plotSetup.sDisplayStyle, ug, plotSetup.elementInFile) == false) {
+        // set data field
+        if (updateDataArrays(plotSetup.sDisplayStyle, ug, plotSetup.elementInFile) == false) {
             return visualization;
         }
 
+        // create Data lookup table
         vtkLookupTable defaultLookupTable = createLookupTable(
                 plotSetup.sRange, plotSetup.sDisplayStyle, plotSetup.sDataStyle, ug,
                 plotSetup.minValueRange, plotSetup.maxValueRange,
                 plotSetup.bShowLegend, visualization, plotSetup.elementInFile);
 
+        // create Filters
         if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
 
-            createContourFilter(
+            addContourFilter(
                     defaultLookupTable, ug, 0,
                     plotSetup.sDisplayStyle, visualization);
 
-            createVectorFieldFilter(defaultLookupTable, ug,
+            addVectorFieldFilter(defaultLookupTable, ug,
                     plotSetup.startsWith, plotSetup.elementInFile, plotSetup.index, plotSetup.fieldScaleFactor,
                     plotSetup.sDisplayStyle, visualization);
         } else {
 
             if (plotSetup.sDataStyle.equals(DataStyle.NONE)) {
 
-                createPlainDataVisualization(defaultLookupTable, ug,
+                addPlainDataVisualization(defaultLookupTable, ug,
                         plotSetup.sDisplayStyle, visualization);
             }
 
             if (plotSetup.sDataStyle.equals(DataStyle.WARP_AUTO)
                     || plotSetup.sDataStyle.equals(DataStyle.WARP_FACTOR)) {
 
-                createWarpDataVisualization(ug, plotSetup.sDataStyle, plotSetup.warpFactor,
+                addWarpDataVisualization(ug, plotSetup.sDataStyle, plotSetup.warpFactor,
                         defaultLookupTable, plotSetup.sDisplayStyle, visualization, plotSetup.elementInFile);
             }
 
             if (plotSetup.sDataStyle.equals(DataStyle.CONTOUR)) {
 
-                createContourFilter(defaultLookupTable, ug,
+                addContourFilter(defaultLookupTable, ug,
                         plotSetup.numContours, plotSetup.sDisplayStyle, visualization);
             }
         }
 
+        // add outline filter
         if (plotSetup.bShowOutline) {
-
-            createOutlineFilter(ug, visualization);
+            addOutlineFilter(ug, visualization);
         }
 
+        // return created Visualization
         return visualization;
     }
 
@@ -527,7 +535,7 @@ public class VTUViewer implements java.io.Serializable {
         return defaultLookupTable;
     }
 
-    static private void createPlainDataVisualization(
+    static private void addPlainDataVisualization(
             vtkLookupTable defaultLookupTable, vtkUnstructuredGrid ug,
             String sDisplayStyle, final Visualization visualization) {
 
@@ -537,7 +545,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkDataSetMapper plainMapper = new vtkDataSetMapper();
         plainMapper.SetInput(ug);
 
-        settingsForMappers(sDisplayStyle, plainMapper, plainLookupTable);
+        updateSettingsForMapper(sDisplayStyle, plainMapper, plainLookupTable);
 
         vtkActor plainActor = new vtkActor();
         plainActor.SetMapper(plainMapper);
@@ -548,7 +556,7 @@ public class VTUViewer implements java.io.Serializable {
 
     }
 
-    static private void createWarpDataVisualization(vtkUnstructuredGrid ug,
+    static private void addWarpDataVisualization(vtkUnstructuredGrid ug,
             String sDataStyle, double warpFactor,
             vtkLookupTable defaultLookupTable, String sDisplayStyle,
             final Visualization visualization, String elementInFile) {
@@ -572,10 +580,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkDataSetMapper warpMapper = new vtkDataSetMapper();
         warpMapper.SetInputConnection(warpScalar.GetOutputPort());
 
-//        warpMapper.SetScalarRange(warpTable.GetTableRange());
-//        warpMapper.SetLookupTable(warpTable);
-
-        settingsForMappers(sDisplayStyle, warpMapper, warpTable);
+        updateSettingsForMapper(sDisplayStyle, warpMapper, warpTable);
 
         vtkActor warpActor = new vtkActor();
         warpActor.SetMapper(warpMapper);
@@ -585,7 +590,7 @@ public class VTUViewer implements java.io.Serializable {
         visualization.addActor(warpActor);
     }
 
-    static private void createContourFilter(vtkLookupTable defaultLookupTable,
+    static private void addContourFilter(vtkLookupTable defaultLookupTable,
             vtkUnstructuredGrid ug, int numContours, String sDisplayStyle,
             final Visualization visualization) {
 
@@ -599,10 +604,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkPolyDataMapper contourMapper = new vtkPolyDataMapper();
         contourMapper.SetInput(contours.GetOutput());
 
-//        contourMapper.SetScalarRange(contourTable.GetTableRange());
-//        contourMapper.SetLookupTable(contourTable);
-
-        settingsForMappers(sDisplayStyle, contourMapper, contourTable);
+        updateSettingsForMapper(sDisplayStyle, contourMapper, contourTable);
 
         vtkActor contourActor = new vtkActor();
         contourActor.SetMapper(contourMapper);
@@ -612,7 +614,7 @@ public class VTUViewer implements java.io.Serializable {
         visualization.addActor(contourActor);
     }
 
-    static private void createVectorFieldFilter(vtkLookupTable defaultLookupTable,
+    static private void addVectorFieldFilter(vtkLookupTable defaultLookupTable,
             vtkUnstructuredGrid ug, String startsWith,
             String elementInFile, int index, double scaleFactor,
             String sDisplayStyle, final Visualization visualization) {
@@ -639,7 +641,7 @@ public class VTUViewer implements java.io.Serializable {
         vtkPolyDataMapper vectorGlyphMapper = new vtkPolyDataMapper();
         vectorGlyphMapper.SetInput(vectorGlyph.GetOutput());
 
-        settingsForMappers(sDisplayStyle, vectorGlyphMapper, vectorfieldTable);
+        updateSettingsForMapper(sDisplayStyle, vectorGlyphMapper, vectorfieldTable);
 
         //optional setttings for lightning
         vtkProperty sliceProp = new vtkProperty();
@@ -656,7 +658,7 @@ public class VTUViewer implements java.io.Serializable {
         visualization.addActor(vectorActor);
     }
 
-    static private void createOutlineFilter(vtkUnstructuredGrid ug,
+    static private void addOutlineFilter(vtkUnstructuredGrid ug,
             final Visualization visualization) {
 
         vtkOutlineFilter outline = new vtkOutlineFilter();
@@ -671,7 +673,7 @@ public class VTUViewer implements java.io.Serializable {
         visualization.addActor(outlineActor);
     }
 
-    static private boolean settingScalarsOrVectors(String sDisplayStyle,
+    static private boolean updateDataArrays(String sDisplayStyle,
             vtkUnstructuredGrid ug,
             String elementInFile) {
 
@@ -712,7 +714,7 @@ public class VTUViewer implements java.io.Serializable {
             vtkUnstructuredGrid ug,
             String elementInFile) {
 
-        settingScalarsOrVectors(sDisplayStyle, ug, elementInFile);
+        updateDataArrays(sDisplayStyle, ug, elementInFile);
 
         // try point data
         boolean pointData = true;
@@ -757,7 +759,7 @@ public class VTUViewer implements java.io.Serializable {
         return valueMinMax;
     }
 
-    static private void settingsForMappers(String sDisplayStyle,
+    static private void updateSettingsForMapper(String sDisplayStyle,
             vtkMapper mapper, vtkLookupTable lookupTable) {
 
         mapper.SetLookupTable(lookupTable);
@@ -765,9 +767,9 @@ public class VTUViewer implements java.io.Serializable {
         if (!sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
 
             mapper.SetScalarRange(lookupTable.GetTableRange());
-            mapper.ScalarVisibilityOn();
             mapper.SetColorModeToMapScalars();
-        } else if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
+            mapper.ScalarVisibilityOn();
+        } else {
 
             mapper.SetScalarRange(lookupTable.GetTableRange());
             mapper.ScalarVisibilityOn();//color for glyphs
