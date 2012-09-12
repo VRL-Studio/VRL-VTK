@@ -193,8 +193,12 @@ public class VTUViewer implements java.io.Serializable {
                     ArrayList<File> allFiles = getAllFilesInFolder(plotSetup.fileOrFolder, plotSetup.startsWith, "vtu");
 
                     // if nothing changed, wait 1s before next lookup
-                    if (lastAllFiles.equals(allFiles)) {
-                        Thread.sleep(waitingTime);
+                    if (lastAllFiles.size() == allFiles.size()) {
+                        if (lastAllFiles.equals(allFiles)) {
+                            Thread.sleep(waitingTime);
+                            System.out.println(" **** Waiting in while loop");
+                            continue;
+                        }
                     }
 
                     if (!filesAnalysed && !allFiles.isEmpty()) {
@@ -455,49 +459,35 @@ public class VTUViewer implements java.io.Serializable {
                 plotSetup.minValueRange, plotSetup.maxValueRange,
                 plotSetup.bShowLegend, visualization, plotSetup.elementInFile);
 
-        if (plotSetup.sDataStyle.equals(DataStyle.NONE)) {
-
-            System.out.println(" - - DataStyle.NONE ");
-
-            // TODO FIX THIS WORKAROUND if() else()
-            // if DataStyle.NONE and DisplayStyle.VECTORFIELD are chosen
-            // there is a plain visualized too much
-            if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
-
-                System.out.println(" - - DataStyle.NONE "
-                        + " && DisplayStyle.VECTORFIELD WORKAROUND");
-
-                createContourFilter(
-                        defaultLookupTable, ug, 0,
-                        plotSetup.sDisplayStyle, visualization);
-
-            } else {
-
-                createPlainDataVisualization(
-                        defaultLookupTable, ug,
-                        plotSetup.sDisplayStyle, visualization);
-            }
-        }
-
-        if (plotSetup.sDataStyle.equals(DataStyle.WARP_AUTO)
-                || plotSetup.sDataStyle.equals(DataStyle.WARP_FACTOR)) {
-
-            createWarpDataVisualization(ug, plotSetup.sDataStyle, plotSetup.warpFactor,
-                    defaultLookupTable, plotSetup.sDisplayStyle, visualization, plotSetup.elementInFile);
-        }
-
-
-        if (plotSetup.sDataStyle.equals(DataStyle.CONTOUR)) {
-
-            createContourFilter(defaultLookupTable, ug,
-                    plotSetup.numContours, plotSetup.sDisplayStyle, visualization);
-        }
-
         if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
+
+            createContourFilter(
+                    defaultLookupTable, ug, 0,
+                    plotSetup.sDisplayStyle, visualization);
 
             createVectorFieldFilter(defaultLookupTable, ug,
                     plotSetup.startsWith, plotSetup.elementInFile, plotSetup.index, plotSetup.fieldScaleFactor,
                     plotSetup.sDisplayStyle, visualization);
+        } else {
+
+            if (plotSetup.sDataStyle.equals(DataStyle.NONE)) {
+
+                createPlainDataVisualization(defaultLookupTable, ug,
+                        plotSetup.sDisplayStyle, visualization);
+            }
+
+            if (plotSetup.sDataStyle.equals(DataStyle.WARP_AUTO)
+                    || plotSetup.sDataStyle.equals(DataStyle.WARP_FACTOR)) {
+
+                createWarpDataVisualization(ug, plotSetup.sDataStyle, plotSetup.warpFactor,
+                        defaultLookupTable, plotSetup.sDisplayStyle, visualization, plotSetup.elementInFile);
+            }
+
+            if (plotSetup.sDataStyle.equals(DataStyle.CONTOUR)) {
+
+                createContourFilter(defaultLookupTable, ug,
+                        plotSetup.numContours, plotSetup.sDisplayStyle, visualization);
+            }
         }
 
         if (plotSetup.bShowOutline) {
@@ -563,7 +553,6 @@ public class VTUViewer implements java.io.Serializable {
             vtkLookupTable defaultLookupTable, String sDisplayStyle,
             final Visualization visualization, String elementInFile) {
 
-//        double[] valueMinMax = ug.GetPointData().GetScalars().GetRange();
         double[] valueMinMax = getRange(sDisplayStyle, ug, elementInFile);
 
         double factor = 1.0 / (valueMinMax[1] - valueMinMax[0]);
@@ -686,21 +675,34 @@ public class VTUViewer implements java.io.Serializable {
             vtkUnstructuredGrid ug,
             String elementInFile) {
 
-        vtkDataArray id = ug.GetPointData().GetArray(elementInFile);
+        // try point data
+        boolean pointData = true;
+        vtkDataArray dataArray = ug.GetPointData().GetArray(elementInFile);
 
-        if (id == null) {
+        // try cell data
+        if (dataArray == null) {
+            dataArray = ug.GetCellData().GetArray(elementInFile);
+            pointData = false;
+        }
+
+        // if not successful, return false
+        if (dataArray == null) {
+            System.out.println(" SETTING DATA: Cannot read data.");
             return false;
         }
 
         if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
-
-            ug.GetPointData().SetVectors(id);
-//            ug.GetPointData().SetActiveVectors(elementInFile);
-
+            if (pointData) {
+                ug.GetPointData().SetVectors(dataArray);
+            } else {
+                ug.GetCellData().SetVectors(dataArray);
+            }
         } else {
-
-            ug.GetPointData().SetScalars(id);
-//            ug.GetPointData().SetActiveScalars(elementInFile);
+            if (pointData) {
+                ug.GetPointData().SetScalars(dataArray);
+            } else {
+                ug.GetCellData().SetScalars(dataArray);
+            }
         }
 
         return true;
@@ -712,18 +714,33 @@ public class VTUViewer implements java.io.Serializable {
 
         settingScalarsOrVectors(sDisplayStyle, ug, elementInFile);
 
-        double[] valueMinMax;
-        vtkDataArray dataArray;
+        // try point data
+        boolean pointData = true;
+        vtkDataArray dataArray = ug.GetPointData().GetArray(elementInFile);
+
+        // try cell data
+        if (dataArray == null) {
+            dataArray = ug.GetCellData().GetArray(elementInFile);
+            pointData = false;
+        }
 
         if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
 
-            dataArray = ug.GetPointData().GetVectors();
-
-
+            if (pointData) {
+                dataArray = ug.GetPointData().GetVectors();
+            } else {
+                dataArray = ug.GetCellData().GetVectors();
+            }
         } else {
 
-            dataArray = ug.GetPointData().GetScalars();
+            if (pointData) {
+                dataArray = ug.GetPointData().GetScalars();
+            } else {
+                dataArray = ug.GetCellData().GetScalars();
+            }
         }
+
+        double[] valueMinMax;
 
         if (dataArray != null) {
             valueMinMax = dataArray.GetRange();
@@ -740,11 +757,8 @@ public class VTUViewer implements java.io.Serializable {
         return valueMinMax;
     }
 
-    static private void settingsForMappers(String sDisplayStyle, //vtkUnstructuredGrid ug,
+    static private void settingsForMappers(String sDisplayStyle,
             vtkMapper mapper, vtkLookupTable lookupTable) {
-
-//        mapper.SetInputConnection(ug.GetProducerPort()); // DONT DO THESE HERE
-//        mapper.SetInput(filter.GetOutput()); // mapper has no SetInput()
 
         mapper.SetLookupTable(lookupTable);
 
@@ -753,15 +767,11 @@ public class VTUViewer implements java.io.Serializable {
             mapper.SetScalarRange(lookupTable.GetTableRange());
             mapper.ScalarVisibilityOn();
             mapper.SetColorModeToMapScalars();
-
         } else if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
 
             mapper.SetScalarRange(lookupTable.GetTableRange());
-
-//            mapper.ScalarVisibilityOff();
             mapper.ScalarVisibilityOn();//color for glyphs
-
-
+//            mapper.ScalarVisibilityOff();
         }
 
         mapper.Update();
@@ -829,8 +839,6 @@ public class VTUViewer implements java.io.Serializable {
 
     @MethodInfo(noGUI = true, callOptions = "assign-window")
     public void setParameterVisibility(VisualObject vObj) {
-
-        VisualCanvas canvas = (VisualCanvas) vObj.getMainCanvas();
 
         final DefaultMethodRepresentation mVisualizeRep = vObj.getObjectRepresentation().
                 getMethodBySignature("visualize", MethodRequest.class,

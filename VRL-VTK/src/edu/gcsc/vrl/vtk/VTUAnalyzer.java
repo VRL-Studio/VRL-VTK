@@ -41,25 +41,28 @@ class VTUAnalyzer implements FileAnalyzer {
         if (files != null && !files.isEmpty()) {
 
             File lastFile = files.get(0);
-
             final String fileName = lastFile.getAbsolutePath();
 
             vtkXMLUnstructuredGridReader reader = new vtkXMLUnstructuredGridReader();
-
-//            System.out.println("-- reader = "+ reader);
             reader.SetFileName(fileName);
             reader.Update();
+
             vtkUnstructuredGrid ug = reader.GetOutput();
 
-            ////////////////////////////////////
-            // get point Data for component
-            ////////////////////////////////////
-            int numVisCompData = ug.GetPointData().GetNumberOfArrays();
-
-            System.out.println("ELEMENTS/ARRAYS IN FILE:");
-            for (int i = 0; i < numVisCompData; i++) {
+            System.out.println("POINT DATA IN FILE:");
+            int numPointData = ug.GetPointData().GetNumberOfArrays();
+            for (int i = 0; i < numPointData; i++) {
                 fileEntries.add(ug.GetPointData().GetArrayName(i));
+                System.out.println("" + i + ": " + ug.GetPointData().GetArrayName(i));
             }
+
+            System.out.println("CELL DATA IN FILE:");
+            int numCellData = ug.GetPointData().GetNumberOfArrays();
+            for (int i = 0; i < numCellData; i++) {
+                fileEntries.add(ug.GetCellData().GetArrayName(i));
+                System.out.println("" + i + ": " + ug.GetCellData().GetArrayName(i));
+            }
+
         }
 
         return fileEntries;
@@ -70,8 +73,6 @@ class VTUAnalyzer implements FileAnalyzer {
         ArrayList<File> result = new ArrayList<File>();
 
         if (dir != null && dir.isDirectory()) {
-
-            System.out.println(getClass().getSimpleName() + " getAllFilesInFolder() DIR");
 
             for (File f : dir.listFiles(new FileFilter() {
 
@@ -84,7 +85,7 @@ class VTUAnalyzer implements FileAnalyzer {
 
                     String fileName = pathName.getPath().substring(sep + 1, dot);
 
-                    boolean nameAccept = startsWith.equals("") || fileName.startsWith(startsWith+"_");
+                    boolean nameAccept = startsWith.equals("") || fileName.startsWith(startsWith + "_");
 
                     return fileAccept && nameAccept;
                 }
@@ -95,9 +96,8 @@ class VTUAnalyzer implements FileAnalyzer {
             }
 
         } else if (dir != null && dir.isFile()) {
-            System.out.println(getClass().getSimpleName() + " getAllFilesInFolder() FILE");
             result.add(dir);
-        } 
+        }
 
         return result;
     }
