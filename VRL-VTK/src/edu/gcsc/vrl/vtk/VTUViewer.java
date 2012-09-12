@@ -5,11 +5,13 @@ import eu.mihosoft.vrl.annotation.MethodInfo;
 import eu.mihosoft.vrl.annotation.OutputInfo;
 import eu.mihosoft.vrl.annotation.ParamGroupInfo;
 import eu.mihosoft.vrl.annotation.ParamInfo;
+import eu.mihosoft.vrl.io.VPropertyFolderManager;
 import eu.mihosoft.vrl.reflection.DefaultMethodRepresentation;
 import eu.mihosoft.vrl.reflection.TypeRepresentationBase;
 import eu.mihosoft.vrl.reflection.VisualCanvas;
 import eu.mihosoft.vrl.reflection.VisualObject;
 import eu.mihosoft.vrl.system.VMessage;
+import eu.mihosoft.vrl.system.VRL;
 import eu.mihosoft.vrl.types.MethodRequest;
 import eu.mihosoft.vrl.types.MultipleOutputType;
 import eu.mihosoft.vrl.types.SelectionInputType;
@@ -300,7 +302,7 @@ public class VTUViewer implements java.io.Serializable {
     @OutputInfo(style = "multi-out",
     elemStyles = {"default", "silent"}, elemNames = {"", "File"},
     elemTypes = {Visualization.class, File.class})
-    @MethodInfo(hide = false, hideCloseIcon = true, valueStyle = "multi-out")
+    @MethodInfo(hide = false, hideCloseIcon = true, valueStyle = "multi-out", valueOptions="serialization=false")
     public Object[] visualize(
             MethodRequest mReq,
             @ParamGroupInfo(group = "Files|true|File depending data.")
@@ -333,6 +335,7 @@ public class VTUViewer implements java.io.Serializable {
 
         // start new thread
         setThread(new Thread(new VisThread(plotSetup)));
+        //VRL.getCurrentProjectController().addSessionThread(getThread());
         startThread();
 
         // determinte file path

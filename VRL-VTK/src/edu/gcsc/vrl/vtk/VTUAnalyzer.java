@@ -48,20 +48,20 @@ class VTUAnalyzer implements FileAnalyzer {
             reader.Update();
 
             vtkUnstructuredGrid ug = reader.GetOutput();
-//
+
 //            System.out.println("POINT DATA IN FILE:");
-//            int numPointData = ug.GetPointData().GetNumberOfArrays();
-//            for (int i = 0; i < numPointData; i++) {
-//                fileEntries.add(ug.GetPointData().GetArrayName(i));
+            int numPointData = ug.GetPointData().GetNumberOfArrays();
+            for (int i = 0; i < numPointData; i++) {
+                fileEntries.add(ug.GetPointData().GetArrayName(i));
 //                System.out.println("" + i + ": " + ug.GetPointData().GetArrayName(i));
-//            }
-//
+            }
+
 //            System.out.println("CELL DATA IN FILE:");
-//            int numCellData = ug.GetCellData().GetNumberOfArrays();
-//            for (int i = 0; i < numCellData; i++) {
-//                fileEntries.add(ug.GetCellData().GetArrayName(i));
+            int numCellData = ug.GetCellData().GetNumberOfArrays();
+            for (int i = 0; i < numCellData; i++) {
+                fileEntries.add(ug.GetCellData().GetArrayName(i));
 //                System.out.println("" + i + ": " + ug.GetCellData().GetArrayName(i));
-//            }
+            }
 
         }
 
