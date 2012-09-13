@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -117,7 +118,9 @@ public class VTUViewer implements java.io.Serializable {
         }
     }
 
-    final protected class PlotSetup {
+    final protected class PlotSetup implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         public PlotSetup(String title, String sRange,
                 double minValueRange, double maxValueRange,
@@ -169,15 +172,15 @@ public class VTUViewer implements java.io.Serializable {
         //
         // non - stored data
         //
-        public File fileOrFolder = null;
-        public String startsWith = "";
+        transient public File fileOrFolder = null;
+        transient public String startsWith = "";
         //
         public String elementInFile = "";
-        public Integer index = 0;
-        public DataType dataType = DataType.INVALID;
-        public vtkDataArray dataArray = null;
+        transient public Integer index = 0;
+        transient public DataType dataType = DataType.INVALID;
+        transient public vtkDataArray dataArray = null;
     }
-    transient protected PlotSetup plotSetup = new PlotSetup();
+    protected PlotSetup plotSetup = new PlotSetup();
 
     protected class VisThread implements Runnable {
 
@@ -230,13 +233,13 @@ public class VTUViewer implements java.io.Serializable {
                                 LoadFileObservable.getInstance().setSelectedFile(file, tag, o, windowID);
                             }
 
-                            if (plotSetup.elementInFile.equals("")) {
-                                ArrayList<String> list = new ArrayList<String>();
-                                list.addAll(analyzer.analyzeFile(file));
-                                if (!list.isEmpty()) {
+                            ArrayList<String> list = new ArrayList<String>();
+                            list.addAll(analyzer.analyzeFile(file));
+                            if (!list.isEmpty()) {
+                                if (plotSetup.elementInFile.equals("")) {
                                     plotSetup.elementInFile = list.get(0);
-                                    plotSetup.index = list.indexOf(plotSetup.elementInFile);
                                 }
+                                plotSetup.index = list.indexOf(plotSetup.elementInFile);
                             }
                         } else {
                             LoadFileObservable.getInstance().setInvalidFile(tag, o, windowID);
