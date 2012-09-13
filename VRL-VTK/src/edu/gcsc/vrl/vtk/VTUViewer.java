@@ -487,8 +487,7 @@ public class VTUViewer implements java.io.Serializable {
         }
 
         // create Data lookup table
-        vtkLookupTable defaultLookupTable = createLookupTable(
-                plotSetup.sRange, plotSetup.sDisplayStyle, plotSetup.sDataStyle, ug,
+        vtkLookupTable defaultLookupTable = createLookupTable(plotSetup.sRange,
                 plotSetup.minValueRange, plotSetup.maxValueRange,
                 plotSetup.bShowLegend, visualization, plotSetup.dataArray);
 
@@ -529,8 +528,7 @@ public class VTUViewer implements java.io.Serializable {
         return visualization;
     }
 
-    static private vtkLookupTable createLookupTable(String sRange, String sDisplayStyle, String sDataStyle,
-            vtkUnstructuredGrid ug, double minValueRange, double maxValueRange,
+    static private vtkLookupTable createLookupTable(String sRange, double minValueRange, double maxValueRange,
             boolean bShowLegend, final Visualization visualization, vtkDataArray dataArray) {
 
         vtkLookupTable defaultLookupTable = new vtkLookupTable();
