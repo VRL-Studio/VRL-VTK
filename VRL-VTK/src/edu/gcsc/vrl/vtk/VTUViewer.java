@@ -31,6 +31,8 @@ import javax.swing.SwingUtilities;
 import vtk.vtkActor;
 import vtk.vtkArrowSource;
 import vtk.vtkCellCenters;
+import vtk.vtkCellData;
+import vtk.vtkCellDataToPointData;
 import vtk.vtkContourFilter;
 import vtk.vtkDataArray;
 import vtk.vtkDataSetMapper;
@@ -38,6 +40,8 @@ import vtk.vtkGlyph3D;
 import vtk.vtkLookupTable;
 import vtk.vtkMapper;
 import vtk.vtkOutlineFilter;
+import vtk.vtkPlaneSource;
+import vtk.vtkPointData;
 import vtk.vtkPolyDataMapper;
 import vtk.vtkProperty;
 import vtk.vtkUnstructuredGrid;
@@ -495,7 +499,7 @@ public class VTUViewer implements java.io.Serializable {
         if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
 
             addVectorFieldFilter(defaultLookupTable, ug,
-                    plotSetup.dataType, plotSetup.index, plotSetup.fieldScaleFactor,
+                    plotSetup.dataType, plotSetup.elementInFile, plotSetup.index, plotSetup.fieldScaleFactor,
                     plotSetup.sDisplayStyle, visualization);
         } else {
 
@@ -635,36 +639,35 @@ public class VTUViewer implements java.io.Serializable {
     }
 
     static private void addVectorFieldFilter(vtkLookupTable defaultLookupTable,
-            vtkUnstructuredGrid ug, VTUViewer.DataType dataType, int index, double scaleFactor,
+            vtkUnstructuredGrid ug, VTUViewer.DataType dataType,
+            String elementInFile, int index, double scaleFactor,
             String sDisplayStyle, final Visualization visualization) {
 
         vtkLookupTable vectorfieldTable = new vtkLookupTable();
         vectorfieldTable.DeepCopy(defaultLookupTable);
 
         vtkGlyph3D vectorGlyph = new vtkGlyph3D();
+        vtkArrowSource arrowSource = new vtkArrowSource();
+
 
         if (dataType.equals(DataType.POINT)) {
 
-            // hack (needed ?!?!?)
-            addContourFilter(
-                    defaultLookupTable, ug, 0,
-                    sDisplayStyle, visualization);
-
-            vtkArrowSource arrowSource = new vtkArrowSource();
+            ug.GetPointData().SetActiveVectors(elementInFile);
 
             vectorGlyph.SetSourceConnection(arrowSource.GetOutputPort());
             vectorGlyph.SetInput(ug);
-            vectorGlyph.SetInputArrayToProcess(index, ug.GetInformation());
         }
 
         if (dataType.equals(DataType.CELL)) {
+            ug.GetCellData().SetActiveVectors(elementInFile);
+
             vtkCellCenters cellCentersFilter = new vtkCellCenters();
             cellCentersFilter.SetInputConnection(ug.GetProducerPort());
-            //cellCentersFilter.SetInput(ug);
+            cellCentersFilter.SetInput(ug);
             cellCentersFilter.VertexCellsOn();
             cellCentersFilter.Update();
 
-            vectorGlyph.SetSourceConnection(cellCentersFilter.GetOutputPort());
+            vectorGlyph.SetSourceConnection(arrowSource.GetOutputPort());
             vectorGlyph.SetInput(cellCentersFilter.GetOutput());
         }
 
@@ -691,8 +694,6 @@ public class VTUViewer implements java.io.Serializable {
         vtkActor vectorActor = new vtkActor();
         vectorActor.SetMapper(vectorGlyphMapper);
         vectorActor.SetProperty(sliceProp);
-
-        setDisplayStyle(vectorActor, sDisplayStyle);
 
         visualization.addActor(vectorActor);
     }
