@@ -101,19 +101,19 @@ public class VTUViewer implements java.io.Serializable {
     private transient ArrayList<File> lastAllFiles = new ArrayList<File>();
     private transient DefaultMethodRepresentation mVisualizeMethodRep;
 
-    protected Thread getThread() {
+    private Thread getThread() {
         synchronized (this) {
             return thread;
         }
     }
 
-    protected void setThread(Thread thread) {
+    private void setThread(Thread thread) {
         synchronized (this) {
             this.thread = thread;
         }
     }
 
-    protected void startThread() {
+    private void startThread() {
         synchronized (this) {
             if (this.thread != null) {
                 this.thread.start();
@@ -121,7 +121,7 @@ public class VTUViewer implements java.io.Serializable {
         }
     }
 
-    protected void interruptThread() {
+    private void interruptThread() {
         synchronized (this) {
             if (this.thread != null) {
                 this.thread.interrupt();
@@ -129,7 +129,7 @@ public class VTUViewer implements java.io.Serializable {
         }
     }
 
-    final protected class PlotSetup implements Serializable {
+    static private class PlotSetup implements Serializable {
 
         private static final long serialVersionUID = 1L;
 
@@ -192,13 +192,14 @@ public class VTUViewer implements java.io.Serializable {
         transient public DataType dataType = DataType.INVALID;
         transient public vtkDataArray dataArray = null;
     }
-    protected PlotSetup plotSetup = new PlotSetup();
 
-    protected class VisThread implements Runnable {
+    private PlotSetup plotSetup = new PlotSetup();
+
+    private class VisRunnable implements Runnable {
 
         transient protected PlotSetup plotSetup = null;
 
-        VisThread(PlotSetup plotSetup) {
+        VisRunnable(PlotSetup plotSetup) {
             this.plotSetup = plotSetup;
         }
 
@@ -221,7 +222,7 @@ public class VTUViewer implements java.io.Serializable {
                 int waitingTime = initWaitingTime;
 
                 while (true) {
-
+                    
                     ArrayList<File> allFiles = getAllFilesInFolder(plotSetup.fileOrFolder, plotSetup.startsWith, "vtu");
 
                     // if nothing changed, wait 1s before next lookup
@@ -308,15 +309,6 @@ public class VTUViewer implements java.io.Serializable {
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            interruptThread();
-        } finally {
-            super.finalize();
-        }
-    }
-
     @OutputInfo(style = "multi-out",
     elemStyles = {"default", "silent"}, elemNames = {"", "File"},
     elemTypes = {Visualization.class, File.class})
@@ -352,7 +344,7 @@ public class VTUViewer implements java.io.Serializable {
         interruptThread();
 
         // start new thread
-        setThread(new Thread(new VisThread(plotSetup)));
+        setThread(new Thread(new VisRunnable(plotSetup)));
         VRL.getCurrentProjectController().addSessionThread(getThread());
         startThread();
 
@@ -476,7 +468,7 @@ public class VTUViewer implements java.io.Serializable {
 
     }
 
-    static protected Visualization createVisualization(File file, PlotSetup plotSetup) {
+    static private Visualization createVisualization(File file, PlotSetup plotSetup) {
 
         // create new Visualization
         final Visualization visualization = new Visualization();
