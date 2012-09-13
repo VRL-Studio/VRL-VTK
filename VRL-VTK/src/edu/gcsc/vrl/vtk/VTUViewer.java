@@ -33,6 +33,7 @@ import vtk.vtkArrowSource;
 import vtk.vtkCellCenters;
 import vtk.vtkCellData;
 import vtk.vtkCellDataToPointData;
+import vtk.vtkColorTransferFunction;
 import vtk.vtkContourFilter;
 import vtk.vtkDataArray;
 import vtk.vtkDataSetMapper;
@@ -547,9 +548,18 @@ public class VTUViewer implements java.io.Serializable {
         }
 
         defaultLookupTable.SetTableRange(minValueRange, maxValueRange);
-        defaultLookupTable.SetHueRange(0.0, 1);
-        defaultLookupTable.SetSaturationRange(0.6, 1);
+
+        // something strange
+//        defaultLookupTable.SetHueRange(0.0, 1);
+//        defaultLookupTable.SetSaturationRange(0.6, 1);
+//        defaultLookupTable.SetValueRange(1, 1);
+
+        // blue to red
+        defaultLookupTable.SetHueRange(0.66667, 0.0);
+        defaultLookupTable.SetSaturationRange(1, 1);
         defaultLookupTable.SetValueRange(1, 1);
+        defaultLookupTable.SetAlphaRange(1, 1);
+        defaultLookupTable.SetNumberOfColors(256);
 
         defaultLookupTable.Build();
 
