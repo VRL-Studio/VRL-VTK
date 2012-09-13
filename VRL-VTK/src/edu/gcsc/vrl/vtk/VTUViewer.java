@@ -66,6 +66,12 @@ public class VTUViewer implements java.io.Serializable {
         private static final String MIN_MAX = "Min/Max";
     }
 
+    public static class Arrow {
+
+        private static final String AUTO = "Auto";
+        private static final String SCALED = "Scaled";
+    }
+
     public static class DisplayStyle {
 
         private static final String SURFACE = "Surface";
@@ -170,6 +176,7 @@ public class VTUViewer implements java.io.Serializable {
         //
         public Double warpFactor = 1.0;
         public Integer numContours = 5;
+        public String arrowStyle = VTUViewer.Arrow.AUTO;
         public Double fieldScaleFactor = 0.05;
         //
         public Long wait = 0L;
@@ -431,7 +438,13 @@ public class VTUViewer implements java.io.Serializable {
             options = "invokeOnChange=true; value=5",
             nullIsValid = true) final int numContours,
             @ParamGroupInfo(group = "Filters")
-            @ParamInfo(name = "Vector Field Scale Factor",
+            @ParamInfo(name = "Arrow Size",
+            style = "selection",
+            options = "invokeOnChange=true; value=[\""
+            + VTUViewer.Arrow.AUTO + "\",\""
+            + VTUViewer.Arrow.SCALED + "\"]") final String sFieldScaleType,
+            @ParamGroupInfo(group = "Filters")
+            @ParamInfo(name = "Arrow Scale Factor",
             style = "default",
             options = "invokeOnChange=true; value=0.05",
             nullIsValid = true) final double fieldScaleFactor) {
@@ -456,6 +469,7 @@ public class VTUViewer implements java.io.Serializable {
         //
         plotSetup.warpFactor = warpFactor;
         plotSetup.numContours = numContours;
+        plotSetup.arrowStyle = sFieldScaleType;
         plotSetup.fieldScaleFactor = fieldScaleFactor;
         //
         plotSetup.elementInFile = elementInFile;
@@ -499,8 +513,17 @@ public class VTUViewer implements java.io.Serializable {
         // create Filters
         if (plotSetup.sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
 
+            double factor = plotSetup.fieldScaleFactor;
+            if (plotSetup.arrowStyle.equals(Arrow.AUTO)) {
+                double[] valueMinMax = defaultLookupTable.GetTableRange();
+                double diag = ug.GetLength();
+                double max = Math.max(Math.abs(valueMinMax[1]), Math.abs(valueMinMax[0]));
+                // this is heuristic, should be improved
+                factor = 0.04 * diag / max;
+            }
+
             addVectorFieldFilter(defaultLookupTable, ug,
-                    plotSetup.dataType, plotSetup.elementInFile, plotSetup.index, plotSetup.fieldScaleFactor,
+                    plotSetup.dataType, plotSetup.elementInFile, plotSetup.index, factor,
                     plotSetup.sDisplayStyle, visualization);
         } else {
 
@@ -598,6 +621,13 @@ public class VTUViewer implements java.io.Serializable {
         double[] valueMinMax = getRange(dataArray);
 
         double factor = 1.0 / (valueMinMax[1] - valueMinMax[0]);
+        if(valueMinMax[1] == valueMinMax[0]){
+            if(valueMinMax[1] != 0.0){
+                factor = 1.0 / valueMinMax[1];
+            } else {
+                factor = 1.0;
+            }
+        }
 
         if (sDataStyle.equals(DataStyle.WARP_FACTOR)) {
             factor = warpFactor;
@@ -881,7 +911,7 @@ public class VTUViewer implements java.io.Serializable {
                 String.class, long.class, String.class,
                 String.class, double.class, double.class,
                 boolean.class, boolean.class, boolean.class,
-                String.class, String.class, double.class, int.class, double.class);
+                String.class, String.class, double.class, int.class, String.class, double.class);
         final ActionListener fileOrFolderListener = new ActionListener() {
             // set visibility for startsWith (2)
             // depending on value of parameter folder (1)
@@ -1003,6 +1033,7 @@ public class VTUViewer implements java.io.Serializable {
                 }
             }
         };
+
         final ActionListener fieldScaleListener = new ActionListener() {
             // set visibility for contourfactor (17)
             // depending on value of parameter sDisplayStyle (13)
@@ -1015,9 +1046,55 @@ public class VTUViewer implements java.io.Serializable {
 
                     String sDisplayStyle = (String) mSetupRep.getParameter(10).getViewValueWithoutValidation();
 
-                    TypeRepresentationBase tRep = mSetupRep.getParameter(14);
+                    TypeRepresentationBase tRep14 = mSetupRep.getParameter(14);
+                    TypeRepresentationBase tRep15 = mSetupRep.getParameter(15);
 
                     if (sDisplayStyle.equals(DisplayStyle.VECTORFIELD)) {
+
+                        tRep14.setVisible(true);
+                        tRep14.getConnector().setVisible(true);
+                        
+                        String sDisplayStyle2 = (String) mSetupRep.getParameter(14).getViewValueWithoutValidation();
+                        TypeRepresentationBase tRep = mSetupRep.getParameter(15);
+
+                        if (sDisplayStyle2.equals(Arrow.SCALED)) {
+
+                            tRep15.setVisible(true);
+                            tRep15.getConnector().setVisible(true);
+
+                        } else {
+
+                            tRep15.setVisible(false);
+                            tRep15.getConnector().setVisible(false);
+                        }
+
+                    } else {
+
+                        tRep14.setVisible(false);
+                        tRep14.getConnector().setVisible(false);
+                        tRep15.setVisible(false);
+                        tRep15.getConnector().setVisible(false);
+
+                    }
+                }
+            }
+        };
+
+        final ActionListener fieldTypeListener = new ActionListener() {
+            // set visibility for contourfactor (17)
+            // depending on value of parameter sDisplayStyle (13)
+
+            public void actionPerformed(ActionEvent e) {
+
+                if (e.getActionCommand().equals(
+                        //                        TypeRepresentationBase.SET_VIEW_VALUE_ACTION
+                        SelectionInputType.SELECTION_CHANGED_ACTION)) {
+
+                    String sDisplayStyle = (String) mSetupRep.getParameter(14).getViewValueWithoutValidation();
+
+                    TypeRepresentationBase tRep = mSetupRep.getParameter(15);
+
+                    if (sDisplayStyle.equals(Arrow.SCALED)) {
 
                         tRep.setVisible(true);
                         tRep.getConnector().setVisible(true);
@@ -1032,6 +1109,8 @@ public class VTUViewer implements java.io.Serializable {
             }
         };
 
+        mSetupRep.getParameter(
+                14).getActionListeners().add(fieldTypeListener);
         mSetupRep.getParameter(
                 10).getActionListeners().add(fieldScaleListener);
         mSetupRep.getParameter(
@@ -1049,6 +1128,8 @@ public class VTUViewer implements java.io.Serializable {
         ArrayList<ActionListener> listeners = new ArrayList<ActionListener>();
 
         listeners.add(fieldScaleListener);
+
+        listeners.add(fieldTypeListener);
 
         listeners.add(contourListener);
 
