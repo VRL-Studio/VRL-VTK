@@ -31,13 +31,13 @@ public class Configurator extends VPluginConfigurator {
     private File templateProjectSrc;
 
     public Configurator() {
-        setIdentifier(new PluginIdentifier("VRL-VTK", "1.0"));
+        setIdentifier(new PluginIdentifier("VRL-VTK", "1.1"));
         setDescription("VTK Integration Plugin");
         exportPackage("edu.gcsc.vrl.vtk");
         exportPackage("vtk");
         exportPackage("eu.mihosoft.vtk");
 
-        addDependency(new PluginDependency("VRL", "0.4.1", "0.4.x"));
+        addDependency(new PluginDependency("VRL", "0.4.2.8.3", "0.4.x"));
 
         setLoadNativeLibraries(false);
     }
