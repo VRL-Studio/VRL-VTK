@@ -7,7 +7,7 @@ package edu.gcsc.vrl.vtk;
 import eu.mihosoft.vrl.io.IOUtil;
 import eu.mihosoft.vrl.system.*;
 import eu.mihosoft.vrl.types.observe.VTypeObserveUtil;
-import eu.mihosoft.vrl.visual.ActionDelelator;
+import eu.mihosoft.vrl.visual.ActionDelegator;
 import eu.mihosoft.vrl.visual.VAction;
 import eu.mihosoft.vrl.visual.VSwingUtil;
 import java.awt.event.ActionEvent;
@@ -37,7 +37,7 @@ public class Configurator extends VPluginConfigurator {
         exportPackage("vtk");
         exportPackage("eu.mihosoft.vtk");
 
-        addDependency(new PluginDependency("VRL", "0.4.2", "0.4.x"));
+        addDependency(new PluginDependency("VRL", "0.4.2.8.3", "0.4.x"));
 
         setLoadNativeLibraries(false);
     }
@@ -60,7 +60,7 @@ public class Configurator extends VPluginConfigurator {
             public void actionPerformed(ActionEvent e, Object owner) {
                 SphereInteractorPanel.main(new String[0]);
             }
-        }, ActionDelelator.TOOL_MENU);
+        }, ActionDelegator.TOOL_MENU);
 
         // We make use of VTK GC which will run at 
         VSwingUtil.invokeLater(new Runnable() {
